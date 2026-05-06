@@ -1,430 +1,910 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Weekly Discipline Tracker</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discipline Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #0a0a0f;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(138, 43, 226, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(255, 0, 150, 0.1) 0px, transparent 50%);
+            min-height: 100vh;
+            padding: 30px 20px;
+            color: #e5e7eb;
+        }
 
-<style>
-*{box-sizing:border-box;font-family:system-ui;margin:0;padding:0}
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
 
-body{
-  background:linear-gradient(135deg,#667eea,#764ba2);
-  min-height:100vh;
-  padding:14px;
-}
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
 
-/* LOGIN */
-.login{
-  max-width:300px;
-  margin:70px auto;
-  background:#fff;
-  padding:16px;
-  border-radius:14px;
-  text-align:center;
-}
+        .header h1 {
+            font-size: 3.5em;
+            margin-bottom: 15px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
-/* INPUTS */
-input{
-  width:100%;
-  padding:8px;
-  margin:6px 0;
-  border:1px solid #ddd;
-  border-radius:8px;
-  font-size:13px;
-}
+        .header p {
+            font-size: 1.3em;
+            color: #9ca3af;
+            font-weight: 300;
+        }
 
-/* BUTTONS */
-button{
-  width:100%;
-  padding:9px;
-  margin-top:6px;
-  border:none;
-  border-radius:8px;
-  background:#667eea;
-  color:white;
-  cursor:pointer;
-  font-size:13px;
-}
+        .week-nav {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 25px 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
 
-/* APP */
-.app{display:none;max-width:1100px;margin:auto}
+        .week-nav button {
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+        }
 
-/* HEADER */
-.header{
-  text-align:center;
-  color:white;
-}
+        .week-nav button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(168, 85, 247, 0.6);
+        }
 
-.score{
-  font-size:2.4em;
-  font-weight:800;
-}
+        .week-nav button:disabled {
+            background: rgba(255, 255, 255, 0.1);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
 
-/* WEEK */
-.weekBox{
-  background:white;
-  border-radius:12px;
-  padding:8px;
-  text-align:center;
-  margin:8px 0;
-}
+        .week-info {
+            text-align: center;
+            flex: 1;
+            margin: 0 20px;
+        }
 
-.weekTitle{font-weight:800;font-size:15px}
-.weekRange{font-size:12px;color:#666}
+        .week-info h2 {
+            font-size: 1.6em;
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
 
-/* NAV */
-.nav{
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:8px;
-}
+        .week-info p {
+            color: #9ca3af;
+            font-size: 1em;
+        }
 
-.nav button{
-  width:auto;
-  padding:7px 10px;
-  font-size:12px;
-}
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
 
-/* GRID */
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
+        .score-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
 
-/* CARDS (SMALLER) */
-.card{
-  background:white;
-  padding:10px;
-  border-radius:14px;
-}
+        .score-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #a855f7 0%, #ec4899 100%);
+        }
 
-/* CHART SMALLER */
-canvas{
-  max-width:120px!important;
-  max-height:120px!important;
-  margin:auto;
-  display:block;
-}
+        .score-card h3 {
+            color: #9ca3af;
+            font-size: 0.95em;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
 
-/* TABLE WRAP */
-.tableBox{margin-top:6px}
+        .score-display {
+            font-size: 4.5em;
+            font-weight: 800;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
-/* TABLE */
-table{
-  width:100%;
-  border-collapse:collapse;
-}
+        .score-comparison {
+            font-size: 1.1em;
+            color: #9ca3af;
+            margin-top: 15px;
+        }
 
-th{
-  font-size:10px;
-  color:#667eea;
-  padding:4px;
-}
+        .trend-up {
+            color: #10b981;
+            font-weight: 600;
+        }
 
-td{
-  text-align:center;
-  padding:3px;
-}
+        .trend-down {
+            color: #ef4444;
+            font-weight: 600;
+        }
 
-.habit{
-  text-align:left;
-  font-size:11px;
-  padding:4px;
-}
+        .chart-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
 
-/* CHECKBOX */
-input[type="checkbox"]{
-  transform:scale(1.05);
-}
+        .chart-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #a855f7 0%, #ec4899 100%);
+        }
 
-/* INSIGHTS */
-.insights{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-  margin-top:8px;
-}
+        .chart-card h3 {
+            color: #9ca3af;
+            font-size: 0.95em;
+            margin-bottom: 25px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
 
-/* TIP */
-.tip{
-  background:linear-gradient(135deg,#10b981,#059669);
-  color:white;
-  padding:10px;
-  border-radius:12px;
-  margin-top:8px;
-  font-size:13px;
-}
-</style>
+        .chart-container {
+            position: relative;
+            height: 260px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .insights {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .insight-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .insight-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #a855f7 0%, #ec4899 100%);
+        }
+
+        .insight-card h3 {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+        }
+
+        .insight-card .emoji {
+            font-size: 1.5em;
+        }
+
+        .habit-item {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: #9ca3af;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .habit-item:last-child {
+            border-bottom: none;
+        }
+
+        .tips-card {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            padding: 35px;
+            border-radius: 20px;
+            color: white;
+            box-shadow: 0 8px 32px rgba(168, 85, 247, 0.2);
+            grid-column: 1 / -1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tips-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #a855f7 0%, #ec4899 100%);
+        }
+
+        .tips-card h3 {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+        }
+
+        .tips-card p {
+            font-size: 1.15em;
+            line-height: 1.7;
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .habits-table {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .habits-table::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #a855f7 0%, #ec4899 100%);
+        }
+
+        .habits-table h3 {
+            color: #e5e7eb;
+            font-size: 1.4em;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            padding: 18px 12px;
+            text-align: center;
+            font-weight: 700;
+            color: #a855f7;
+            border-bottom: 2px solid rgba(168, 85, 247, 0.3);
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        thead th:first-child {
+            text-align: left;
+            padding-left: 20px;
+        }
+
+        tbody tr {
+            transition: background 0.2s;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        tbody tr:hover {
+            background: rgba(168, 85, 247, 0.05);
+        }
+
+        tbody td {
+            padding: 15px 12px;
+            text-align: center;
+        }
+
+        tbody td:first-child {
+            text-align: left;
+            font-weight: 500;
+            color: #e5e7eb;
+            padding-left: 20px;
+            font-size: 0.95em;
+        }
+
+        .checkbox-wrapper {
+            display: inline-block;
+        }
+
+        input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            accent-color: #a855f7;
+            transition: transform 0.2s;
+        }
+
+        input[type="checkbox"]:hover {
+            transform: scale(1.15);
+        }
+
+        .actions {
+            margin-top: 25px;
+            text-align: center;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: #e5e7eb;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px 28px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(168, 85, 247, 0.5);
+            transform: translateY(-2px);
+        }
+
+        /* Number badges for insights */
+        .habit-item strong {
+            color: #a855f7;
+        }
+
+        @media (max-width: 968px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .insights {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2.5em;
+            }
+
+            .score-display {
+                font-size: 3.5em;
+            }
+
+            table {
+                font-size: 0.85em;
+            }
+
+            tbody td:first-child {
+                font-size: 0.85em;
+            }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 20px 15px;
+            }
+
+            .week-nav {
+                flex-direction: column;
+                gap: 15px;
+                padding: 20px;
+            }
+
+            .week-info {
+                margin: 0;
+            }
+
+            .week-nav button {
+                width: 100%;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .score-card, .chart-card, .insight-card, .tips-card, .habits-table {
+                padding: 25px 20px;
+            }
+        }
+    </style>
 </head>
-
 <body>
+    <div class="container">
+        <div class="header">
+            <h1>Everything You Need, All in One Place</h1>
+            <p>Track your discipline. Build your identity.</p>
+        </div>
 
-<!-- LOGIN -->
-<div id="login" class="login">
-<h3>🔐 Login</h3>
-<input id="email" placeholder="Email">
-<input id="pass" type="password" placeholder="Password">
-<button id="loginBtn">Login</button>
-<button id="signupBtn">Sign Up</button>
-</div>
+        <div class="week-nav">
+            <button onclick="previousWeek()" id="prevBtn">← Previous</button>
+            <div class="week-info">
+                <h2 id="weekTitle">Week 1, 2025</h2>
+                <p id="weekDates">January 1 - January 7</p>
+            </div>
+            <button onclick="nextWeek()" id="nextBtn" disabled>Next →</button>
+        </div>
 
-<!-- APP -->
-<div id="app" class="app">
+        <div class="dashboard">
+            <div class="score-card">
+                <h3>Your Score</h3>
+                <div class="score-display" id="currentScore">0%</div>
+                <div class="score-comparison" id="comparison">Track your first week</div>
+            </div>
 
-<div class="header">
-<h2>💪 Discipline Tracker</h2>
-<div class="score" id="score">0%</div>
-</div>
+            <div class="chart-card">
+                <h3>Progress Overview</h3>
+                <div class="chart-container">
+                    <canvas id="progressChart"></canvas>
+                </div>
+            </div>
+        </div>
 
-<div class="nav">
-<button onclick="changeWeek(-1)">← Prev</button>
-<button onclick="changeWeek(1)">Next →</button>
-</div>
+        <div class="insights">
+            <div class="insight-card">
+                <h3><span class="emoji">🏆</span> Where You Excel</h3>
+                <div id="topHabits">
+                    <div class="habit-item">Complete your first checks to see insights</div>
+                </div>
+            </div>
 
-<div class="weekBox">
-<div class="weekTitle" id="weekTitle">Week</div>
-<div class="weekRange" id="weekRange">Range</div>
-</div>
+            <div class="insight-card">
+                <h3><span class="emoji">⚠️</span> Needs Attention</h3>
+                <div id="bottomHabits">
+                    <div class="habit-item">Complete your first checks to see insights</div>
+                </div>
+            </div>
 
-<div class="grid">
+            <div class="tips-card">
+                <h3><span class="emoji">💡</span> Your Daily Reminder</h3>
+                <p id="motivationalTip">Progress isn't linear. Focus on showing up every day. Small wins build momentum.</p>
+            </div>
+        </div>
 
-<!-- LEFT -->
-<div>
+        <div class="habits-table">
+            <h3>📋 Weekly Habit Checklist</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Habit</th>
+                        <th>Mon</th>
+                        <th>Tue</th>
+                        <th>Wed</th>
+                        <th>Thu</th>
+                        <th>Fri</th>
+                        <th>Sat</th>
+                        <th>Sun</th>
+                    </tr>
+                </thead>
+                <tbody id="habitsTableBody">
+                </tbody>
+            </table>
 
-<div class="card">
-<canvas id="chart"></canvas>
-<p id="ai" style="font-size:12px;margin-top:6px"></p>
+            <div class="actions">
+                <button class="btn-secondary" onclick="clearWeek()">Clear This Week</button>
+                <button class="btn-secondary" onclick="clearAllData()">Reset All Data</button>
+            </div>
+        </div>
+    </div>
 
-<div class="tableBox">
-<table>
-<thead>
-<tr>
-<th>Habit</th>
-<th>D1</th><th>D2</th><th>D3</th><th>D4</th><th>D5</th><th>D6</th><th>D7</th>
-</tr>
-</thead>
-<tbody id="table"></tbody>
-</table>
-</div>
+    <script>
+        // All 28 habits
+        const habits = [
+            "Wake up early",
+            "Train your body 4-5x a week",
+            "Cut mindless scrolling in half",
+            "Read 10 pages a day",
+            "Drink more water than you think you need",
+            "Fix your sleep (no phone 30 min before bed)",
+            "Eat like someone who respects themselves",
+            "Take solo walks with no music",
+            "Start saying 'no' without explaining",
+            "Journal your thoughts daily",
+            "Do one uncomfortable thing every day",
+            "Spend less time reacting, more time creating",
+            "Clean your room like it matters (it does)",
+            "Upgrade your style, even slightly",
+            "Talk slower, think sharper",
+            "Build a skill that compounds (content, business, fitness)",
+            "Fix your posture",
+            "Limit junk food, not your standards",
+            "Learn to be alone without feeling lonely",
+            "Protect your energy like it's currency",
+            "Surround yourself with people who move with purpose",
+            "Set clear weekly goals",
+            "Do more than what's expected of you",
+            "Cut excuses instantly",
+            "Show up even on bad days",
+            "Spend time in silence",
+            "Focus on discipline over motivation",
+            "Become someone you would respect"
+        ];
 
-</div>
+        let currentWeekOffset = 0;
+        let chart = null;
 
-</div>
+        // Get week ID (e.g., "2025-W01")
+        function getWeekId(offset = 0) {
+            const now = new Date();
+            now.setDate(now.getDate() + (offset * 7));
+            const year = now.getFullYear();
+            const firstDay = new Date(year, 0, 1);
+            const days = Math.floor((now - firstDay) / (24 * 60 * 60 * 1000));
+            const weekNum = Math.ceil((days + firstDay.getDay() + 1) / 7);
+            return `${year}-W${String(weekNum).padStart(2, '0')}`;
+        }
 
-<!-- RIGHT -->
-<div class="card insights">
+        // Get Monday of week
+        function getMondayOfWeek(offset = 0) {
+            const now = new Date();
+            now.setDate(now.getDate() + (offset * 7));
+            const day = now.getDay();
+            const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(now.setDate(diff));
+        }
 
-<div>
-<b style="font-size:13px">🏆 Excel</b>
-<div id="top" style="font-size:12px"></div>
-</div>
+        // Format date range
+        function formatWeekDates(monday) {
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            const options = { month: 'long', day: 'numeric' };
+            return `${monday.toLocaleDateString('en-US', options)} - ${sunday.toLocaleDateString('en-US', options)}`;
+        }
 
-<div>
-<b style="font-size:13px">⚠️ Needs Work</b>
-<div id="bottom" style="font-size:12px"></div>
-</div>
+        // Get week number
+        function getWeekNumber(date) {
+            const firstDay = new Date(date.getFullYear(), 0, 1);
+            const days = Math.floor((date - firstDay) / (24 * 60 * 60 * 1000));
+            return Math.ceil((days + firstDay.getDay() + 1) / 7);
+        }
 
-<div class="tip">
-<b>💡 Reminder</b>
-<p id="tip">Start small. Build identity.</p>
-</div>
+        // Initialize storage
+        function initStorage() {
+            if (!localStorage.getItem('weeklyData')) {
+                localStorage.setItem('weeklyData', JSON.stringify({}));
+            }
+        }
 
-</div>
+        // Get week data
+        function getWeekData(weekId) {
+            const data = JSON.parse(localStorage.getItem('weeklyData'));
+            if (!data[weekId]) {
+                data[weekId] = {
+                    habits: Array(28).fill(null).map(() => Array(7).fill(false)),
+                    score: 0
+                };
+            }
+            return data[weekId];
+        }
 
-</div>
+        // Save week data
+        function saveWeekData(weekId, weekData) {
+            const data = JSON.parse(localStorage.getItem('weeklyData'));
+            data[weekId] = weekData;
+            localStorage.setItem('weeklyData', JSON.stringify(data));
+        }
 
-</div>
+        // Calculate score
+        function calculateScore(weekData) {
+            const total = 28 * 7;
+            const completed = weekData.habits.flat().filter(Boolean).length;
+            return Math.round((completed / total) * 100);
+        }
 
-<script type="module">
+        // Render table
+        function renderTable() {
+            const weekId = getWeekId(currentWeekOffset);
+            const weekData = getWeekData(weekId);
+            const tbody = document.getElementById('habitsTableBody');
+            tbody.innerHTML = '';
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged }
-from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+            habits.forEach((habit, habitIndex) => {
+                const row = document.createElement('tr');
+                const habitCell = document.createElement('td');
+                habitCell.textContent = habit;
+                row.appendChild(habitCell);
 
-import { getFirestore, doc, getDoc, setDoc }
-from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+                for (let day = 0; day < 7; day++) {
+                    const dayCell = document.createElement('td');
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = weekData.habits[habitIndex][day];
+                    checkbox.onchange = () => toggleHabit(habitIndex, day);
+                    dayCell.appendChild(checkbox);
+                    row.appendChild(dayCell);
+                }
 
-/* FIREBASE */
-const firebaseConfig = {
-apiKey: "AIzaSyDZ025kEy2N6WtCBEYPPrtWR8qW-tLvZ-w",
-authDomain: "tracker-14cc6.firebaseapp.com",
-projectId: "tracker-14cc6",
-storageBucket: "tracker-14cc6.appspot.com",
-messagingSenderId: "172277195199",
-appId: "1:172277195199:web:1677fa833efc934d9c410a"
-};
+                tbody.appendChild(row);
+            });
+        }
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+        // Toggle habit
+        function toggleHabit(habitIndex, dayIndex) {
+            const weekId = getWeekId(currentWeekOffset);
+            const weekData = getWeekData(weekId);
+            weekData.habits[habitIndex][dayIndex] = !weekData.habits[habitIndex][dayIndex];
+            weekData.score = calculateScore(weekData);
+            saveWeekData(weekId, weekData);
+            updateDashboard();
+        }
 
-/* UI */
-const login=document.getElementById("login");
-const appBox=document.getElementById("app");
+        // Update dashboard
+        function updateDashboard() {
+            const weekId = getWeekId(currentWeekOffset);
+            const weekData = getWeekData(weekId);
+            const score = weekData.score;
 
-/* HABITS */
-const habits=[
-"Wake up early",
-"Train your body 4-5x a week",
-"Cut mindless scrolling in half",
-"Read 10 pages a day",
-"Drink more water than you think you need",
-"Fix sleep",
-"Eat clean",
-"Walk alone",
-"Say no",
-"Journal",
-"Do uncomfortable thing",
-"Track habits",
-"Create more",
-"Clean room",
-"Improve style",
-"Think sharper",
-"Stop validation",
-"Build skill",
-"Fix posture",
-"Less junk food",
-"Be alone",
-"Protect energy",
-"Better people",
-"Weekly goals",
-"Go beyond expectations",
-"Stop excuses",
-"Show up",
-"Silence time",
-"Discipline > motivation",
-"Respect yourself"
-];
+            // Update score
+            document.getElementById('currentScore').textContent = `${score}%`;
 
-let data=Array(30).fill().map(()=>Array(7).fill(false));
-let user;
-let week=0;
+            // Update comparison
+            if (currentWeekOffset === 0) {
+                const lastWeekId = getWeekId(-1);
+                const lastWeekData = getWeekData(lastWeekId);
+                if (lastWeekData.score > 0) {
+                    const diff = score - lastWeekData.score;
+                    const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
+                    const className = diff > 0 ? 'trend-up' : diff < 0 ? 'trend-down' : '';
+                    document.getElementById('comparison').innerHTML = 
+                        `Last week: ${lastWeekData.score}% → This week: ${score}% <span class="${className}">${arrow} ${Math.abs(diff)}%</span>`;
+                } else {
+                    document.getElementById('comparison').textContent = 'Track your first week';
+                }
+            } else {
+                document.getElementById('comparison').textContent = `Week score: ${score}%`;
+            }
 
-/* WEEK */
-function getWeekInfo(offset){
-const now=new Date();
-now.setDate(now.getDate()+offset*7);
+            // Update chart
+            updateChart(score);
 
-const day=now.getDay();
-const diff=now.getDate()-day+(day===0?-6:1);
+            // Update insights
+            updateInsights(weekData);
 
-const m=new Date(now.setDate(diff));
-const s=new Date(m); s.setDate(m.getDate()+6);
+            // Update tips
+            updateTips(score);
+        }
 
-const opt={month:"short",day:"numeric"};
+        // Update chart
+        function updateChart(score) {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            
+            if (chart) {
+                chart.destroy();
+            }
 
-return{
-title:`Week ${Math.ceil(m.getDate()/7)}, ${m.getFullYear()}`,
-range:`${m.toLocaleDateString("en-US",opt)} - ${s.toLocaleDateString("en-US",opt)}`
-};
-}
+            chart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Completed', 'Remaining'],
+                    datasets: [{
+                        data: [score, 100 - score],
+                        backgroundColor: [
+                            'rgba(168, 85, 247, 0.8)',
+                            'rgba(255, 255, 255, 0.1)'
+                        ],
+                        borderColor: [
+                            'rgba(168, 85, 247, 1)',
+                            'rgba(255, 255, 255, 0.2)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                color: '#9ca3af',
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.parsed + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
-/* LOGIN */
-loginBtn.onclick=()=>signInWithEmailAndPassword(auth,email.value,pass.value);
-signupBtn.onclick=()=>createUserWithEmailAndPassword(auth,email.value,pass.value);
+        // Update insights
+        function updateInsights(weekData) {
+            const habitScores = habits.map((habit, index) => {
+                const completed = weekData.habits[index].filter(Boolean).length;
+                const percentage = Math.round((completed / 7) * 100);
+                return { habit, completed, percentage };
+            });
 
-/* AUTH */
-onAuthStateChanged(auth,async u=>{
-if(u){
-user=u.uid;
-login.style.display="none";
-appBox.style.display="block";
-await load();
-render();
-}
-});
+            habitScores.sort((a, b) => b.percentage - a.percentage);
 
-/* LOAD/SAVE */
-async function load(){
-let s=await getDoc(doc(db,"users",user));
-if(s.exists()) data=s.data().data;
-}
+            // Top habits
+            const topHabits = habitScores.slice(0, 3);
+            const topHtml = topHabits.every(h => h.percentage === 0) 
+                ? '<div class="habit-item">Complete your first checks to see insights</div>'
+                : topHabits.map((h, i) => 
+                    `<div class="habit-item"><strong>${i + 1}.</strong> ${h.habit} — ${h.percentage}% (${h.completed}/7)</div>`
+                  ).join('');
+            document.getElementById('topHabits').innerHTML = topHtml;
 
-async function save(){
-await setDoc(doc(db,"users",user),{data});
-}
+            // Bottom habits
+            const bottomHabits = habitScores.slice(-3).reverse();
+            const bottomHtml = bottomHabits.every(h => h.percentage === 0) 
+                ? '<div class="habit-item">Complete your first checks to see insights</div>'
+                : bottomHabits.map((h, i) => 
+                    `<div class="habit-item"><strong>${i + 1}.</strong> ${h.habit} — ${h.percentage}% (${h.completed}/7)</div>`
+                  ).join('');
+            document.getElementById('bottomHabits').innerHTML = bottomHtml;
+        }
 
-/* NAV */
-window.changeWeek=(d)=>{
-if(week+d>0) return;
-week+=d;
-render();
-};
+        // Update tips
+        function updateTips(score) {
+            const tips = {
+                low: [
+                    "Progress isn't linear. Focus on just 5 habits this week and master them. Small wins build momentum.",
+                    "The scoreboard doesn't lie. Track everything. Every checkbox is a vote for the person you're becoming.",
+                    "Start with one habit. Master it. Then add another. Rome wasn't built in a day."
+                ],
+                medium: [
+                    "You're building consistency. The difference between average and excellent is showing up on the hard days. Keep going.",
+                    "Motivation fades. Discipline compounds. You're in the grind now—this is where winners are made.",
+                    "Comparison is with yesterday's version of yourself. You're ahead of where you were last week."
+                ],
+                high: [
+                    "You're in the top tier. This is what transformation looks like. Discipline is becoming your identity.",
+                    "Excellence is a habit. You're proving that every single day. Don't stop now—this is momentum.",
+                    "You're not tracking habits anymore. You're building identity. Keep showing up like this."
+                ]
+            };
 
-/* TOGGLE */
-window.toggle=async(i,d)=>{
-data[i][d]=!data[i][d];
-await save();
-render();
-};
+            let tipArray = tips.low;
+            if (score > 75) tipArray = tips.high;
+            else if (score >= 50) tipArray = tips.medium;
 
-/* SCORE */
-function score(){
-return Math.round(data.flat().filter(Boolean).length/(30*7)*100);
-}
+            const randomTip = tipArray[Math.floor(Math.random() * tipArray.length)];
+            document.getElementById('motivationalTip').textContent = randomTip;
+        }
 
-/* RENDER */
-let chart;
+        // Update week display
+        function updateWeekDisplay() {
+            const monday = getMondayOfWeek(currentWeekOffset);
+            const weekNum = getWeekNumber(monday);
+            const year = monday.getFullYear();
+            
+            document.getElementById('weekTitle').textContent = `Week ${weekNum}, ${year}`;
+            document.getElementById('weekDates').textContent = formatWeekDates(monday);
+            
+            // Disable next button if current week
+            document.getElementById('nextBtn').disabled = currentWeekOffset === 0;
+        }
 
-function render(){
+        // Previous week
+        function previousWeek() {
+            currentWeekOffset--;
+            updateWeekDisplay();
+            renderTable();
+            updateDashboard();
+        }
 
-let s=score();
-document.getElementById("score").innerText=s+"%";
+        // Next week
+        function nextWeek() {
+            if (currentWeekOffset < 0) {
+                currentWeekOffset++;
+                updateWeekDisplay();
+                renderTable();
+                updateDashboard();
+            }
+        }
 
-let info=getWeekInfo(week);
-weekTitle.innerText=info.title;
-weekRange.innerText=info.range;
+        // Clear week
+        function clearWeek() {
+            if (confirm('Are you sure you want to clear all checks for this week? This cannot be undone.')) {
+                const weekId = getWeekId(currentWeekOffset);
+                const weekData = {
+                    habits: Array(28).fill(null).map(() => Array(7).fill(false)),
+                    score: 0
+                };
+                saveWeekData(weekId, weekData);
+                renderTable();
+                updateDashboard();
+            }
+        }
 
-document.getElementById("ai").innerText=
-s<50?"Start small":
-s<80?"Good":
-"Elite";
+        // Clear all data
+        function clearAllData() {
+            if (confirm('⚠️ WARNING: This will delete ALL your progress across ALL weeks. This cannot be undone. Are you absolutely sure?')) {
+                localStorage.setItem('weeklyData', JSON.stringify({}));
+                renderTable();
+                updateDashboard();
+            }
+        }
 
-/* TABLE */
-let html="";
-habits.forEach((h,i)=>{
-html+=`<tr><td class='habit'>${h}</td>`;
-for(let d=0;d<7;d++){
-html+=`<td><input type='checkbox'
-${data[i][d]?"checked":""}
-onchange='toggle(${i},${d})'></td>`;
-}
-html+="</tr>";
-});
-table.innerHTML=html;
+        // Initialize app
+        function init() {
+            initStorage();
+            updateWeekDisplay();
+            renderTable();
+            updateDashboard();
+        }
 
-/* CHART */
-if(chart) chart.destroy();
-chart=new Chart(document.getElementById("chart"),{
-type:"doughnut",
-data:{datasets:[{data:[s,100-s]}]},
-options:{plugins:{legend:{display:false}}}
-});
-
-/* INSIGHTS */
-let stats=habits.map((h,i)=>({
-h,
-v:data[i].filter(Boolean).length
-})).sort((a,b)=>b.v-a.v);
-
-top.innerHTML=stats.slice(0,3).map(x=>"• "+x.h).join("<br>");
-bottom.innerHTML=stats.slice(-3).map(x=>"• "+x.h).join("<br>");
-
-/* TIP */
-tip.innerText=[
-"Discipline builds identity",
-"Small wins matter",
-"Consistency wins",
-"Keep going"
-][Math.floor(Math.random()*4)];
-}
-
-</script>
-
+        init();
+    </script>
 </body>
 </html>
- 
