@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Weekly Discipline Tracker</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+*{box-sizing:border-box;font-family:system-ui;margin:0;padding:0}
+
+body{
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  min-height:100vh;
+  padding:14px;
+}
+
+/* LOGIN */
+.login{
+  max-width:300px;
+  margin:70px auto;
+  background:#fff;
+  padding:16px;
+  border-radius:14px;
+  text-align:center;
+}
+
+/* INPUTS */
+input{
+  width:100%;
+  padding:8px;
+  margin:6px 0;
+  border:1px solid #ddd;
+  border-radius:8px;
+  font-size:13px;
+}
+
+/* BUTTONS */
+button{
+  width:100%;
+  padding:9px;
+  margin-top:6px;
+  border:none;
+  border-radius:8px;
+  background:#667eea;
+  color:white;
+  cursor:pointer;
+  font-size:13px;
+}
+
+/* APP */
+.app{display:none;max-width:1100px;margin:auto}
+
+/* HEADER */
+.header{
+  text-align:center;
+  color:white;
+}
+
+.score{
+  font-size:2.4em;
+  font-weight:800;
+}
+
+/* WEEK */
+.weekBox{
+  background:white;
+  border-radius:12px;
+  padding:8px;
+  text-align:center;
+  margin:8px 0;
+}
+
+.weekTitle{font-weight:800;font-size:15px}
+.weekRange{font-size:12px;color:#666}
+
+/* NAV */
+.nav{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:8px;
+}
+
+.nav button{
+  width:auto;
+  padding:7px 10px;
+  font-size:12px;
+}
+
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+/* CARDS (SMALLER) */
+.card{
+  background:white;
+  padding:10px;
+  border-radius:14px;
+}
+
+/* CHART SMALLER */
+canvas{
+  max-width:120px!important;
+  max-height:120px!important;
+  margin:auto;
+  display:block;
+}
+
+/* TABLE WRAP */
+.tableBox{margin-top:6px}
+
+/* TABLE */
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th{
+  font-size:10px;
+  color:#667eea;
+  padding:4px;
+}
+
+td{
+  text-align:center;
+  padding:3px;
+}
+
+.habit{
+  text-align:left;
+  font-size:11px;
+  padding:4px;
+}
+
+/* CHECKBOX */
+input[type="checkbox"]{
+  transform:scale(1.05);
+}
+
+/* INSIGHTS */
+.insights{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:8px;
+}
+
+/* TIP */
+.tip{
+  background:linear-gradient(135deg,#10b981,#059669);
+  color:white;
+  padding:10px;
+  border-radius:12px;
+  margin-top:8px;
+  font-size:13px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="login" class="login">
+<h3>🔐 Login</h3>
+<input id="email" placeholder="Email">
+<input id="pass" type="password" placeholder="Password">
+<button id="loginBtn">Login</button>
+<button id="signupBtn">Sign Up</button>
+</div>
+
+<!-- APP -->
+<div id="app" class="app">
+
+<div class="header">
+<h2>💪 Discipline Tracker</h2>
+<div class="score" id="score">0%</div>
+</div>
+
+<div class="nav">
+<button onclick="changeWeek(-1)">← Prev</button>
+<button onclick="changeWeek(1)">Next →</button>
+</div>
+
+<div class="weekBox">
+<div class="weekTitle" id="weekTitle">Week</div>
+<div class="weekRange" id="weekRange">Range</div>
+</div>
+
+<div class="grid">
+
+<!-- LEFT -->
+<div>
+
+<div class="card">
+<canvas id="chart"></canvas>
+<p id="ai" style="font-size:12px;margin-top:6px"></p>
+
+<div class="tableBox">
+<table>
+<thead>
+<tr>
+<th>Habit</th>
+<th>D1</th><th>D2</th><th>D3</th><th>D4</th><th>D5</th><th>D6</th><th>D7</th>
+</tr>
+</thead>
+<tbody id="table"></tbody>
+</table>
+</div>
+
+</div>
+
+</div>
+
+<!-- RIGHT -->
+<div class="card insights">
+
+<div>
+<b style="font-size:13px">🏆 Excel</b>
+<div id="top" style="font-size:12px"></div>
+</div>
+
+<div>
+<b style="font-size:13px">⚠️ Needs Work</b>
+<div id="bottom" style="font-size:12px"></div>
+</div>
+
+<div class="tip">
+<b>💡 Reminder</b>
+<p id="tip">Start small. Build identity.</p>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged }
+from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+import { getFirestore, doc, getDoc, setDoc }
+from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+/* FIREBASE */
+const firebaseConfig = {
+apiKey: "AIzaSyDZ025kEy2N6WtCBEYPPrtWR8qW-tLvZ-w",
+authDomain: "tracker-14cc6.firebaseapp.com",
+projectId: "tracker-14cc6",
+storageBucket: "tracker-14cc6.appspot.com",
+messagingSenderId: "172277195199",
+appId: "1:172277195199:web:1677fa833efc934d9c410a"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* UI */
+const login=document.getElementById("login");
+const appBox=document.getElementById("app");
+
+/* HABITS */
+const habits=[
+"Wake up early",
+"Train your body 4-5x a week",
+"Cut mindless scrolling in half",
+"Read 10 pages a day",
+"Drink more water than you think you need",
+"Fix sleep",
+"Eat clean",
+"Walk alone",
+"Say no",
+"Journal",
+"Do uncomfortable thing",
+"Track habits",
+"Create more",
+"Clean room",
+"Improve style",
+"Think sharper",
+"Stop validation",
+"Build skill",
+"Fix posture",
+"Less junk food",
+"Be alone",
+"Protect energy",
+"Better people",
+"Weekly goals",
+"Go beyond expectations",
+"Stop excuses",
+"Show up",
+"Silence time",
+"Discipline > motivation",
+"Respect yourself"
+];
+
+let data=Array(30).fill().map(()=>Array(7).fill(false));
+let user;
+let week=0;
+
+/* WEEK */
+function getWeekInfo(offset){
+const now=new Date();
+now.setDate(now.getDate()+offset*7);
+
+const day=now.getDay();
+const diff=now.getDate()-day+(day===0?-6:1);
+
+const m=new Date(now.setDate(diff));
+const s=new Date(m); s.setDate(m.getDate()+6);
+
+const opt={month:"short",day:"numeric"};
+
+return{
+title:`Week ${Math.ceil(m.getDate()/7)}, ${m.getFullYear()}`,
+range:`${m.toLocaleDateString("en-US",opt)} - ${s.toLocaleDateString("en-US",opt)}`
+};
+}
+
+/* LOGIN */
+loginBtn.onclick=()=>signInWithEmailAndPassword(auth,email.value,pass.value);
+signupBtn.onclick=()=>createUserWithEmailAndPassword(auth,email.value,pass.value);
+
+/* AUTH */
+onAuthStateChanged(auth,async u=>{
+if(u){
+user=u.uid;
+login.style.display="none";
+appBox.style.display="block";
+await load();
+render();
+}
+});
+
+/* LOAD/SAVE */
+async function load(){
+let s=await getDoc(doc(db,"users",user));
+if(s.exists()) data=s.data().data;
+}
+
+async function save(){
+await setDoc(doc(db,"users",user),{data});
+}
+
+/* NAV */
+window.changeWeek=(d)=>{
+if(week+d>0) return;
+week+=d;
+render();
+};
+
+/* TOGGLE */
+window.toggle=async(i,d)=>{
+data[i][d]=!data[i][d];
+await save();
+render();
+};
+
+/* SCORE */
+function score(){
+return Math.round(data.flat().filter(Boolean).length/(30*7)*100);
+}
+
+/* RENDER */
+let chart;
+
+function render(){
+
+let s=score();
+document.getElementById("score").innerText=s+"%";
+
+let info=getWeekInfo(week);
+weekTitle.innerText=info.title;
+weekRange.innerText=info.range;
+
+document.getElementById("ai").innerText=
+s<50?"Start small":
+s<80?"Good":
+"Elite";
+
+/* TABLE */
+let html="";
+habits.forEach((h,i)=>{
+html+=`<tr><td class='habit'>${h}</td>`;
+for(let d=0;d<7;d++){
+html+=`<td><input type='checkbox'
+${data[i][d]?"checked":""}
+onchange='toggle(${i},${d})'></td>`;
+}
+html+="</tr>";
+});
+table.innerHTML=html;
+
+/* CHART */
+if(chart) chart.destroy();
+chart=new Chart(document.getElementById("chart"),{
+type:"doughnut",
+data:{datasets:[{data:[s,100-s]}]},
+options:{plugins:{legend:{display:false}}}
+});
+
+/* INSIGHTS */
+let stats=habits.map((h,i)=>({
+h,
+v:data[i].filter(Boolean).length
+})).sort((a,b)=>b.v-a.v);
+
+top.innerHTML=stats.slice(0,3).map(x=>"• "+x.h).join("<br>");
+bottom.innerHTML=stats.slice(-3).map(x=>"• "+x.h).join("<br>");
+
+/* TIP */
+tip.innerText=[
+"Discipline builds identity",
+"Small wins matter",
+"Consistency wins",
+"Keep going"
+][Math.floor(Math.random()*4)];
+}
+
+</script>
+
+</body>
+</html>
+ 
