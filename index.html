@@ -1026,7 +1026,11 @@
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
                     checkbox.checked = weekData.habits[habitIndex][day];
-                    checkbox.onchange = () => toggleHabit(habitIndex, day);
+                    // Store weekId in checkbox so it knows which week it belongs to
+                    checkbox.dataset.weekId = weekId;
+                    checkbox.dataset.habitIndex = habitIndex;
+                    checkbox.dataset.dayIndex = day;
+                    checkbox.onchange = () => toggleHabit(habitIndex, day, weekId);
                     dayCell.appendChild(checkbox);
                     row.appendChild(dayCell);
                 }
@@ -1036,18 +1040,33 @@
         }
 
         // Toggle habit
-        async function toggleHabit(habitIndex, dayIndex) {
-            const weekId = getWeekId(currentWeekOffset);
-            
-            // Toggle in current data
-            currentWeekData.habits[habitIndex][dayIndex] = !currentWeekData.habits[habitIndex][dayIndex];
-            currentWeekData.score = calculateScore(currentWeekData);
-            
-            // Save to Firebase
-            await saveWeekData(weekId, currentWeekData);
-            
-            // Update UI
-            await updateDashboard();
+        async function toggleHabit(habitIndex, dayIndex, weekId) {
+            try {
+                // Use the passed weekId (which is tied to this specific checkbox)
+                // rather than calculating it, to avoid race conditions
+                if (!weekId) {
+                    weekId = getWeekId(currentWeekOffset);
+                }
+                
+                // Toggle in current data
+                currentWeekData.habits[habitIndex][dayIndex] = !currentWeekData.habits[habitIndex][dayIndex];
+                currentWeekData.score = calculateScore(currentWeekData);
+                
+                console.log('Toggled habit:', habitIndex, dayIndex, 'Week:', weekId, 'New score:', currentWeekData.score);
+                
+                // Update UI
+                updateDashboard();
+                
+                console.log('Dashboard updated');
+                
+                // Save to Firebase
+                await saveWeekData(weekId, currentWeekData);
+                
+                console.log('Data saved to Firebase for week:', weekId);
+            } catch (error) {
+                console.error('Error in toggleHabit:', error);
+                showError('Error: ' + error.message);
+            }
         }
 
         // Update dashboard
@@ -1088,7 +1107,7 @@
             // Update insights
             updateInsights(weekData);
 
-            // Update tips
+            // Update tips (no longer random - only updates when score changes)
             updateTips(score);
         }
 
