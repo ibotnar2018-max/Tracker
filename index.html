@@ -25,6 +25,71 @@
             min-height: 100vh;
             padding: 30px 20px;
             color: #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        /* Light Mode */
+        body.light-mode {
+            background: #f3f4f6;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(168, 85, 247, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.08) 0px, transparent 50%);
+            color: #1f2937;
+        }
+
+        body.light-mode .week-nav,
+        body.light-mode .score-card,
+        body.light-mode .chart-card,
+        body.light-mode .insight-card,
+        body.light-mode .habits-table,
+        body.light-mode .user-info,
+        body.light-mode .btn-toggle {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-mode .week-info p,
+        body.light-mode .score-card h3,
+        body.light-mode .chart-card h3,
+        body.light-mode .habit-item,
+        body.light-mode .user-email,
+        body.light-mode thead th {
+            color: #6b7280;
+        }
+
+        body.light-mode tbody td:first-child,
+        body.light-mode .insight-card h3,
+        body.light-mode .habits-table h3,
+        body.light-mode .header p,
+        body.light-mode .btn-toggle {
+            color: #374151;
+        }
+
+        body.light-mode tbody tr {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        body.light-mode tbody tr:hover {
+            background: rgba(168, 85, 247, 0.05);
+        }
+
+        body.light-mode thead th {
+            border-bottom: 2px solid rgba(168, 85, 247, 0.3);
+        }
+
+        body.light-mode .form-group input {
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #1f2937;
+        }
+
+        body.light-mode .auth-container {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-mode .auth-toggle {
+            color: #6b7280;
         }
 
         .container {
@@ -193,6 +258,26 @@
             padding: 10px 20px;
             border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e5e7eb;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-toggle:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
         }
 
         .user-email {
@@ -713,6 +798,14 @@
                 <h1>Everything You Need, All in One Place</h1>
                 <p>Track your discipline. Build your identity.</p>
                 <div class="user-info">
+                    <button class="btn-toggle" onclick="toggleTheme()" id="themeBtn">
+                        <span id="themeIcon">☀️</span>
+                        <span id="themeText">Light</span>
+                    </button>
+                    <button class="btn-toggle" onclick="toggleLanguage()" id="langBtn">
+                        <span id="langFlag">🇬🇧</span>
+                        <span id="langText">EN</span>
+                    </button>
                     <span class="user-email" id="userEmail"></span>
                     <button class="btn-logout" onclick="logout()">Logout</button>
                 </div>
@@ -809,6 +902,127 @@
         let currentUser = null;
         let currentWeekOffset = 0;
         let chart = null;
+        let currentLanguage = localStorage.getItem('language') || 'en';
+        let currentTheme = localStorage.getItem('theme') || 'dark';
+
+        // Translations
+        const translations = {
+            en: {
+                title: "Everything You Need, All in One Place",
+                subtitle: "Track your discipline. Build your identity.",
+                yourScore: "Your Score",
+                trackFirstWeek: "Track your first week",
+                lastWeek: "Last week",
+                thisWeek: "This week",
+                weekScore: "Week score",
+                progressOverview: "Progress Overview",
+                whereExcel: "Where You Excel",
+                needsAttention: "Needs Attention",
+                completeFirst: "Complete your first checks to see insights",
+                dailyReminder: "Your Daily Reminder",
+                weeklyChecklist: "Weekly Habit Checklist",
+                clearWeek: "Clear This Week",
+                clearConfirm: "Are you sure you want to clear all checks for this week? This cannot be undone.",
+                previous: "Previous",
+                next: "Next",
+                week: "Week",
+                logout: "Logout",
+                completed: "Completed",
+                remaining: "Remaining",
+                days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+            },
+            ro: {
+                title: "Tot Ce Ai Nevoie, Într-un Singur Loc",
+                subtitle: "Urmărește-ți disciplina. Construiește-ți identitatea.",
+                yourScore: "Scorul Tău",
+                trackFirstWeek: "Urmărește prima săptămână",
+                lastWeek: "Săptămâna trecută",
+                thisWeek: "Săptămâna aceasta",
+                weekScore: "Scor săptămânal",
+                progressOverview: "Privire de Ansamblu",
+                whereExcel: "Unde Excelezi",
+                needsAttention: "Necesită Atenție",
+                completeFirst: "Completează primele bifări pentru a vedea statistici",
+                dailyReminder: "Reamintirea Ta Zilnică",
+                weeklyChecklist: "Lista Obiceiurilor Săptămânale",
+                clearWeek: "Șterge Săptămâna",
+                clearConfirm: "Ești sigur că vrei să ștergi toate bifările pentru această săptămână? Această acțiune nu poate fi anulată.",
+                previous: "Anterior",
+                next: "Următor",
+                week: "Săptămâna",
+                logout: "Deconectare",
+                completed: "Completat",
+                remaining: "Rămas",
+                days: ["Lun", "Mar", "Mie", "Joi", "Vin", "Sâm", "Dum"]
+            }
+        };
+
+        // Toggle theme
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('theme', currentTheme);
+            applyTheme();
+        }
+
+        function applyTheme() {
+            if (currentTheme === 'light') {
+                document.body.classList.add('light-mode');
+                document.getElementById('themeIcon').textContent = '🌙';
+                document.getElementById('themeText').textContent = 'Dark';
+            } else {
+                document.body.classList.remove('light-mode');
+                document.getElementById('themeIcon').textContent = '☀️';
+                document.getElementById('themeText').textContent = 'Light';
+            }
+        }
+
+        // Toggle language
+        function toggleLanguage() {
+            currentLanguage = currentLanguage === 'en' ? 'ro' : 'en';
+            localStorage.setItem('language', currentLanguage);
+            applyLanguage();
+        }
+
+        function applyLanguage() {
+            const t = translations[currentLanguage];
+            
+            // Update static text
+            document.querySelector('.header h1').textContent = t.title;
+            document.querySelector('.header p').textContent = t.subtitle;
+            document.querySelector('.score-card h3').textContent = t.yourScore;
+            document.querySelector('.chart-card h3').textContent = t.progressOverview;
+            document.querySelector('.habits-table h3').innerHTML = '📋 ' + t.weeklyChecklist;
+            document.querySelector('.btn-secondary').textContent = t.clearWeek;
+            document.getElementById('prevBtn').innerHTML = '← ' + t.previous;
+            document.getElementById('nextBtn').innerHTML = t.next + ' →';
+            
+            // Update insight cards
+            document.querySelector('.insight-card:nth-child(1) h3').innerHTML = '<span class="emoji">🏆</span> ' + t.whereExcel;
+            document.querySelector('.insight-card:nth-child(2) h3').innerHTML = '<span class="emoji">⚠️</span> ' + t.needsAttention;
+            document.querySelector('.tips-card h3').innerHTML = '<span class="emoji">💡</span> ' + t.dailyReminder;
+            
+            // Update table headers
+            const headers = document.querySelectorAll('thead th');
+            headers[0].textContent = currentLanguage === 'en' ? 'Habit' : 'Obicei';
+            t.days.forEach((day, i) => {
+                if (headers[i + 1]) headers[i + 1].textContent = day;
+            });
+            
+            // Update language button
+            if (currentLanguage === 'ro') {
+                document.getElementById('langFlag').textContent = '🇷🇴';
+                document.getElementById('langText').textContent = 'RO';
+            } else {
+                document.getElementById('langFlag').textContent = '🇬🇧';
+                document.getElementById('langText').textContent = 'EN';
+            }
+            
+            // Update logout button
+            document.querySelector('.btn-logout').textContent = t.logout;
+            
+            // Update comparison if exists
+            updateDashboard();
+        }
 
         // All 28 habits
         const habits = [
