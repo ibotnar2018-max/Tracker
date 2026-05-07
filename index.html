@@ -846,15 +846,12 @@
         auth.onAuthStateChanged(user => {
             if (user) {
                 currentUser = user;
-                console.log('✅ User logged in:', user.email);
-                console.log('User UID:', user.uid);
                 document.getElementById('auth').style.display = 'none';
                 document.getElementById('app').style.display = 'block';
                 document.getElementById('userEmail').textContent = user.email;
                 init();
             } else {
                 currentUser = null;
-                console.log('User logged out');
                 document.getElementById('auth').style.display = 'block';
                 document.getElementById('app').style.display = 'none';
             }
@@ -978,7 +975,12 @@
             const doc = await docRef.get();
 
             if (doc.exists) {
-                return doc.data();
+                const data = doc.data();
+                // Convert flat object back to nested array
+                return {
+                    habits: convertFlatToNestedArray(data.habits),
+                    score: data.score || 0
+                };
             } else {
                 return createEmptyWeekData();
             }
@@ -991,28 +993,56 @@
             };
         }
 
+        // Convert nested array to flat object for Firebase
+        function convertNestedArrayToFlat(nestedArray) {
+            const flat = {};
+            nestedArray.forEach((week, habitIndex) => {
+                week.forEach((checked, dayIndex) => {
+                    flat[`h${habitIndex}_d${dayIndex}`] = checked;
+                });
+            });
+            return flat;
+        }
+
+        // Convert flat object back to nested array
+        function convertFlatToNestedArray(flatObj) {
+            const nested = Array(28).fill(null).map(() => Array(7).fill(false));
+            
+            if (!flatObj) return nested;
+            
+            Object.keys(flatObj).forEach(key => {
+                const match = key.match(/h(\d+)_d(\d+)/);
+                if (match) {
+                    const habitIndex = parseInt(match[1]);
+                    const dayIndex = parseInt(match[2]);
+                    nested[habitIndex][dayIndex] = flatObj[key];
+                }
+            });
+            
+            return nested;
+        }
+
         // Save week data to Firestore
         async function saveWeekData(weekId, weekData) {
             if (!currentUser) {
-                console.error('Cannot save: No user logged in');
-                throw new Error('User not authenticated');
+                console.error('No user logged in');
+                return;
             }
 
             try {
-                const collectionPath = `users/${currentUser.uid}/weeks`;
-                console.log('Saving to path:', collectionPath, 'with docId:', weekId);
-                
                 const docRef = db.collection('users').doc(currentUser.uid).collection('weeks').doc(weekId);
-                await docRef.set(weekData);
-                
-                console.log('✅ Firebase save successful');
+                // Convert nested array to flat object before saving
+                const flatData = {
+                    habits: convertNestedArrayToFlat(weekData.habits),
+                    score: weekData.score
+                };
+                await docRef.set(flatData);
+                console.log('Data saved successfully to Firebase:', weekId);
             } catch (error) {
-                console.error('❌ Firebase save error:', error);
+                console.error('Firebase save error:', error);
                 console.error('Error code:', error.code);
-                if (error.code === 'permission-denied') {
-                    console.error('Permission denied - check Firestore security rules');
-                }
-                throw error;
+                console.error('Error message:', error.message);
+                throw error; // Re-throw to be caught by toggleHabit
             }
         }
 
@@ -1046,11 +1076,7 @@
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
                     checkbox.checked = weekData.habits[habitIndex][day];
-                    // Store weekId in checkbox so it knows which week it belongs to
-                    checkbox.dataset.weekId = weekId;
-                    checkbox.dataset.habitIndex = habitIndex;
-                    checkbox.dataset.dayIndex = day;
-                    checkbox.onchange = () => toggleHabit(habitIndex, day, weekId);
+                    checkbox.onchange = () => toggleHabit(habitIndex, day);
                     dayCell.appendChild(checkbox);
                     row.appendChild(dayCell);
                 }
@@ -1060,49 +1086,70 @@
         }
 
         // Toggle habit
-        async function toggleHabit(habitIndex, dayIndex, weekId) {
-            try {
-                if (!currentUser) {
-                    showError('Not logged in. Please refresh and log in again.');
-                    console.error('No user logged in');
-                    return;
+        async function toggleHabit(habitIndex, dayIndex) {
+            const weekId = getWeekId(currentWeekOffset);
+            
+            // Toggle in current data
+            currentWeekData.habits[habitIndex][dayIndex] = !currentWeekData.habits[habitIndex][dayIndex];
+            currentWeekData.score = calculateScore(currentWeekData);
+            
+            // Update UI immediately (before saving to Firebase)
+            updateDashboardSync(currentWeekData);
+            
+            // Save to Firebase in background
+            saveWeekData(weekId, currentWeekData).catch(error => {
+                console.error('Error saving to Firebase:', error);
+                
+                // Show helpful error message based on error type
+                let errorMsg = 'Failed to save progress. ';
+                if (error.code === 'permission-denied') {
+                    errorMsg += 'Firestore permissions not set up. Check Firebase Console → Firestore Database → Rules.';
+                } else if (error.code === 'unavailable') {
+                    errorMsg += 'Please check your internet connection.';
+                } else {
+                    errorMsg += error.message || 'Unknown error occurred.';
                 }
+                
+                alert(errorMsg);
+            });
+        }
+        
+        // Synchronous dashboard update for instant feedback
+        function updateDashboardSync(weekData) {
+            const score = weekData.score;
 
-                // Use the passed weekId (which is tied to this specific checkbox)
-                // rather than calculating it, to avoid race conditions
-                if (!weekId) {
-                    weekId = getWeekId(currentWeekOffset);
+            // Update score immediately
+            document.getElementById('currentScore').textContent = `${score}%`;
+
+            // Update chart immediately
+            updateChart(score);
+
+            // Update insights immediately
+            updateInsights(weekData);
+
+            // Update tips immediately
+            updateTips(score);
+            
+            // Update comparison asynchronously (needs Firebase data)
+            updateComparison(score);
+        }
+        
+        // Async comparison update
+        async function updateComparison(score) {
+            if (currentWeekOffset === 0) {
+                const lastWeekId = getWeekId(-1);
+                const lastWeekData = await getWeekData(lastWeekId);
+                if (lastWeekData.score > 0) {
+                    const diff = score - lastWeekData.score;
+                    const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
+                    const className = diff > 0 ? 'trend-up' : diff < 0 ? 'trend-down' : '';
+                    document.getElementById('comparison').innerHTML = 
+                        `Last week: ${lastWeekData.score}% → This week: ${score}% <span class="${className}">${arrow} ${Math.abs(diff)}%</span>`;
+                } else {
+                    document.getElementById('comparison').textContent = 'Track your first week';
                 }
-                
-                console.log('=== Toggle Habit Start ===');
-                console.log('User:', currentUser.uid);
-                console.log('Week ID:', weekId);
-                console.log('Habit Index:', habitIndex, 'Day Index:', dayIndex);
-                
-                // Toggle in current data
-                currentWeekData.habits[habitIndex][dayIndex] = !currentWeekData.habits[habitIndex][dayIndex];
-                currentWeekData.score = calculateScore(currentWeekData);
-                
-                console.log('New score:', currentWeekData.score);
-                console.log('Data to save:', JSON.stringify({
-                    habits: currentWeekData.habits.map(h => h.filter(Boolean).length), // show count per habit
-                    score: currentWeekData.score
-                }));
-                
-                // Update UI immediately
-                await updateDashboard();
-                console.log('Dashboard updated');
-                
-                // Save to Firebase with detailed error handling
-                console.log('Saving to Firebase...');
-                await saveWeekData(weekId, currentWeekData);
-                console.log('✅ Data saved successfully to Firebase');
-                
-            } catch (error) {
-                console.error('❌ Error in toggleHabit:', error);
-                console.error('Error code:', error.code);
-                console.error('Error message:', error.message);
-                showError(`Save failed: ${error.message}. Check console (F12) for details.`);
+            } else {
+                document.getElementById('comparison').textContent = `Week score: ${score}%`;
             }
         }
 
@@ -1144,7 +1191,7 @@
             // Update insights
             updateInsights(weekData);
 
-            // Update tips (no longer random - only updates when score changes)
+            // Update tips
             updateTips(score);
         }
 
@@ -1302,11 +1349,9 @@
 
         // Initialize app
         async function init() {
-            console.log('=== App Initializing ===');
             updateWeekDisplay();
             await renderTable();
             await updateDashboard();
-            console.log('=== App Initialized ===');
         }
     </script>
 </body>
