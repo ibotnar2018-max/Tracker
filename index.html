@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Discipline Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Firebase SDK v8 (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
         * {
             margin: 0;
@@ -28,9 +32,138 @@
             margin: 0 auto;
         }
 
+        /* Auth Container */
+        .auth-container {
+            max-width: 450px;
+            margin: 100px auto;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 50px 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .auth-container h2 {
+            text-align: center;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+        }
+
+        .auth-container p {
+            text-align: center;
+            color: #9ca3af;
+            margin-bottom: 35px;
+            font-size: 1.05em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #9ca3af;
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #e5e7eb;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #a855f7;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.05em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(168, 85, 247, 0.6);
+        }
+
+        .auth-toggle {
+            text-align: center;
+            margin-top: 25px;
+            color: #9ca3af;
+            font-size: 0.95em;
+        }
+
+        .auth-toggle a {
+            color: #a855f7;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .auth-toggle a:hover {
+            color: #ec4899;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        .success-message {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #6ee7b7;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        /* Main App (hidden until logged in) */
+        #app {
+            display: none;
+        }
+
+        #auth {
+            display: block;
+        }
+
         .header {
             text-align: center;
             margin-bottom: 50px;
+            position: relative;
         }
 
         .header h1 {
@@ -47,6 +180,40 @@
             font-size: 1.3em;
             color: #9ca3af;
             font-weight: 300;
+        }
+
+        .user-info {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-email {
+            color: #9ca3af;
+            font-size: 0.9em;
+        }
+
+        .btn-logout {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-logout:hover {
+            background: rgba(239, 68, 68, 0.3);
         }
 
         .week-nav {
@@ -375,10 +542,6 @@
             font-size: 0.95em;
         }
 
-        .checkbox-wrapper {
-            display: inline-block;
-        }
-
         input[type="checkbox"] {
             width: 22px;
             height: 22px;
@@ -418,9 +581,15 @@
             transform: translateY(-2px);
         }
 
-        /* Number badges for insights */
         .habit-item strong {
             color: #a855f7;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #9ca3af;
+            font-size: 1.2em;
         }
 
         @media (max-width: 968px) {
@@ -438,6 +607,12 @@
 
             .score-display {
                 font-size: 3.5em;
+            }
+
+            .user-info {
+                position: static;
+                justify-content: center;
+                margin-top: 20px;
             }
 
             table {
@@ -475,88 +650,166 @@
             .score-card, .chart-card, .insight-card, .tips-card, .habits-table {
                 padding: 25px 20px;
             }
+
+            .auth-container {
+                padding: 40px 30px;
+                margin: 50px 20px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Everything You Need, All in One Place</h1>
-            <p>Track your discipline. Build your identity.</p>
+    <!-- Auth Section -->
+    <div id="auth">
+        <div class="auth-container">
+            <h2>💪 Discipline Tracker</h2>
+            <p>Build your identity, one habit at a time</p>
+
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+            <div id="successMessage" class="success-message" style="display: none;"></div>
+
+            <!-- Login Form -->
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn-primary">Sign In</button>
+                <div class="auth-toggle">
+                    Don't have an account? <a onclick="showSignup()">Sign up</a>
+                </div>
+            </form>
+
+            <!-- Signup Form -->
+            <form id="signupForm" style="display: none;">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="signupEmail" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="signupPassword" required placeholder="••••••••">
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <input type="password" id="signupPasswordConfirm" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn-primary">Create Account</button>
+                <div class="auth-toggle">
+                    Already have an account? <a onclick="showLogin()">Sign in</a>
+                </div>
+            </form>
         </div>
+    </div>
 
-        <div class="week-nav">
-            <button onclick="previousWeek()" id="prevBtn">← Previous</button>
-            <div class="week-info">
-                <h2 id="weekTitle">Week 1, 2025</h2>
-                <p id="weekDates">January 1 - January 7</p>
-            </div>
-            <button onclick="nextWeek()" id="nextBtn" disabled>Next →</button>
-        </div>
-
-        <div class="dashboard">
-            <div class="score-card">
-                <h3>Your Score</h3>
-                <div class="score-display" id="currentScore">0%</div>
-                <div class="score-comparison" id="comparison">Track your first week</div>
-            </div>
-
-            <div class="chart-card">
-                <h3>Progress Overview</h3>
-                <div class="chart-container">
-                    <canvas id="progressChart"></canvas>
+    <!-- Main App -->
+    <div id="app">
+        <div class="container">
+            <div class="header">
+                <h1>Everything You Need, All in One Place</h1>
+                <p>Track your discipline. Build your identity.</p>
+                <div class="user-info">
+                    <span class="user-email" id="userEmail"></span>
+                    <button class="btn-logout" onclick="logout()">Logout</button>
                 </div>
             </div>
-        </div>
 
-        <div class="insights">
-            <div class="insight-card">
-                <h3><span class="emoji">🏆</span> Where You Excel</h3>
-                <div id="topHabits">
-                    <div class="habit-item">Complete your first checks to see insights</div>
+            <div class="week-nav">
+                <button onclick="previousWeek()" id="prevBtn">← Previous</button>
+                <div class="week-info">
+                    <h2 id="weekTitle">Week 1, 2025</h2>
+                    <p id="weekDates">January 1 - January 7</p>
+                </div>
+                <button onclick="nextWeek()" id="nextBtn" disabled>Next →</button>
+            </div>
+
+            <div class="dashboard">
+                <div class="score-card">
+                    <h3>Your Score</h3>
+                    <div class="score-display" id="currentScore">0%</div>
+                    <div class="score-comparison" id="comparison">Track your first week</div>
+                </div>
+
+                <div class="chart-card">
+                    <h3>Progress Overview</h3>
+                    <div class="chart-container">
+                        <canvas id="progressChart"></canvas>
+                    </div>
                 </div>
             </div>
 
-            <div class="insight-card">
-                <h3><span class="emoji">⚠️</span> Needs Attention</h3>
-                <div id="bottomHabits">
-                    <div class="habit-item">Complete your first checks to see insights</div>
+            <div class="insights">
+                <div class="insight-card">
+                    <h3><span class="emoji">🏆</span> Where You Excel</h3>
+                    <div id="topHabits">
+                        <div class="habit-item">Complete your first checks to see insights</div>
+                    </div>
+                </div>
+
+                <div class="insight-card">
+                    <h3><span class="emoji">⚠️</span> Needs Attention</h3>
+                    <div id="bottomHabits">
+                        <div class="habit-item">Complete your first checks to see insights</div>
+                    </div>
+                </div>
+
+                <div class="tips-card">
+                    <h3><span class="emoji">💡</span> Your Daily Reminder</h3>
+                    <p id="motivationalTip">Progress isn't linear. Focus on showing up every day. Small wins build momentum.</p>
                 </div>
             </div>
 
-            <div class="tips-card">
-                <h3><span class="emoji">💡</span> Your Daily Reminder</h3>
-                <p id="motivationalTip">Progress isn't linear. Focus on showing up every day. Small wins build momentum.</p>
-            </div>
-        </div>
+            <div class="habits-table">
+                <h3>📋 Weekly Habit Checklist</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Habit</th>
+                            <th>Mon</th>
+                            <th>Tue</th>
+                            <th>Wed</th>
+                            <th>Thu</th>
+                            <th>Fri</th>
+                            <th>Sat</th>
+                            <th>Sun</th>
+                        </tr>
+                    </thead>
+                    <tbody id="habitsTableBody">
+                    </tbody>
+                </table>
 
-        <div class="habits-table">
-            <h3>📋 Weekly Habit Checklist</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Habit</th>
-                        <th>Mon</th>
-                        <th>Tue</th>
-                        <th>Wed</th>
-                        <th>Thu</th>
-                        <th>Fri</th>
-                        <th>Sat</th>
-                        <th>Sun</th>
-                    </tr>
-                </thead>
-                <tbody id="habitsTableBody">
-                </tbody>
-            </table>
-
-            <div class="actions">
-                <button class="btn-secondary" onclick="clearWeek()">Clear This Week</button>
-                <button class="btn-secondary" onclick="clearAllData()">Reset All Data</button>
+                <div class="actions">
+                    <button class="btn-secondary" onclick="clearWeek()">Clear This Week</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDZ025kEy2N6WtCBEYPPrtWR8qW-tLvZ-w",
+            authDomain: "tracker-14cc6.firebaseapp.com",
+            projectId: "tracker-14cc6",
+            storageBucket: "tracker-14cc6.firebasestorage.app",
+            messagingSenderId: "172277195199",
+            appId: "1:172277195199:web:1677fa833efc934d9c410a",
+            measurementId: "G-FT4DBTC2V0"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let currentUser = null;
+        let currentWeekOffset = 0;
+        let chart = null;
+
         // All 28 habits
         const habits = [
             "Wake up early",
@@ -589,10 +842,97 @@
             "Become someone you would respect"
         ];
 
-        let currentWeekOffset = 0;
-        let chart = null;
+        // Auth State Observer
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('auth').style.display = 'none';
+                document.getElementById('app').style.display = 'block';
+                document.getElementById('userEmail').textContent = user.email;
+                init();
+            } else {
+                currentUser = null;
+                document.getElementById('auth').style.display = 'block';
+                document.getElementById('app').style.display = 'none';
+            }
+        });
 
-        // Get week ID (e.g., "2025-W01")
+        // Show/Hide Auth Forms
+        function showSignup() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('signupForm').style.display = 'block';
+            hideMessages();
+        }
+
+        function showLogin() {
+            document.getElementById('signupForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            hideMessages();
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function hideMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+            } catch (error) {
+                showError(error.message);
+            }
+        });
+
+        // Signup
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('signupPasswordConfirm').value;
+
+            if (password !== confirmPassword) {
+                showError('Passwords do not match!');
+                return;
+            }
+
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters long!');
+                return;
+            }
+
+            try {
+                await auth.createUserWithEmailAndPassword(email, password);
+                showSuccess('Account created successfully!');
+            } catch (error) {
+                showError(error.message);
+            }
+        });
+
+        // Logout
+        function logout() {
+            auth.signOut();
+        }
+
+        // Get week ID
         function getWeekId(offset = 0) {
             const now = new Date();
             now.setDate(now.getDate() + (offset * 7));
@@ -627,30 +967,33 @@
             return Math.ceil((days + firstDay.getDay() + 1) / 7);
         }
 
-        // Initialize storage
-        function initStorage() {
-            if (!localStorage.getItem('weeklyData')) {
-                localStorage.setItem('weeklyData', JSON.stringify({}));
+        // Get week data from Firestore
+        async function getWeekData(weekId) {
+            if (!currentUser) return createEmptyWeekData();
+
+            const docRef = db.collection('users').doc(currentUser.uid).collection('weeks').doc(weekId);
+            const doc = await docRef.get();
+
+            if (doc.exists) {
+                return doc.data();
+            } else {
+                return createEmptyWeekData();
             }
         }
 
-        // Get week data
-        function getWeekData(weekId) {
-            const data = JSON.parse(localStorage.getItem('weeklyData'));
-            if (!data[weekId]) {
-                data[weekId] = {
-                    habits: Array(28).fill(null).map(() => Array(7).fill(false)),
-                    score: 0
-                };
-            }
-            return data[weekId];
+        function createEmptyWeekData() {
+            return {
+                habits: Array(28).fill(null).map(() => Array(7).fill(false)),
+                score: 0
+            };
         }
 
-        // Save week data
-        function saveWeekData(weekId, weekData) {
-            const data = JSON.parse(localStorage.getItem('weeklyData'));
-            data[weekId] = weekData;
-            localStorage.setItem('weeklyData', JSON.stringify(data));
+        // Save week data to Firestore
+        async function saveWeekData(weekId, weekData) {
+            if (!currentUser) return;
+
+            const docRef = db.collection('users').doc(currentUser.uid).collection('weeks').doc(weekId);
+            await docRef.set(weekData);
         }
 
         // Calculate score
@@ -660,10 +1003,15 @@
             return Math.round((completed / total) * 100);
         }
 
+        // Store current week data in memory to avoid re-fetching
+        let currentWeekData = null;
+
         // Render table
-        function renderTable() {
+        async function renderTable() {
             const weekId = getWeekId(currentWeekOffset);
-            const weekData = getWeekData(weekId);
+            const weekData = await getWeekData(weekId);
+            currentWeekData = weekData; // Store in memory
+            
             const tbody = document.getElementById('habitsTableBody');
             tbody.innerHTML = '';
 
@@ -688,19 +1036,30 @@
         }
 
         // Toggle habit
-        function toggleHabit(habitIndex, dayIndex) {
+        async function toggleHabit(habitIndex, dayIndex) {
             const weekId = getWeekId(currentWeekOffset);
-            const weekData = getWeekData(weekId);
-            weekData.habits[habitIndex][dayIndex] = !weekData.habits[habitIndex][dayIndex];
-            weekData.score = calculateScore(weekData);
-            saveWeekData(weekId, weekData);
-            updateDashboard();
+            
+            // Toggle in current data
+            currentWeekData.habits[habitIndex][dayIndex] = !currentWeekData.habits[habitIndex][dayIndex];
+            currentWeekData.score = calculateScore(currentWeekData);
+            
+            // Save to Firebase
+            await saveWeekData(weekId, currentWeekData);
+            
+            // Update UI
+            await updateDashboard();
         }
 
         // Update dashboard
-        function updateDashboard() {
-            const weekId = getWeekId(currentWeekOffset);
-            const weekData = getWeekData(weekId);
+        async function updateDashboard() {
+            // Use stored data if available, otherwise fetch
+            let weekData = currentWeekData;
+            if (!weekData) {
+                const weekId = getWeekId(currentWeekOffset);
+                weekData = await getWeekData(weekId);
+                currentWeekData = weekData;
+            }
+            
             const score = weekData.score;
 
             // Update score
@@ -709,7 +1068,7 @@
             // Update comparison
             if (currentWeekOffset === 0) {
                 const lastWeekId = getWeekId(-1);
-                const lastWeekData = getWeekData(lastWeekId);
+                const lastWeekData = await getWeekData(lastWeekId);
                 if (lastWeekData.score > 0) {
                     const diff = score - lastWeekData.score;
                     const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
@@ -856,55 +1215,41 @@
         }
 
         // Previous week
-        function previousWeek() {
+        async function previousWeek() {
             currentWeekOffset--;
             updateWeekDisplay();
-            renderTable();
-            updateDashboard();
+            await renderTable();
+            await updateDashboard();
         }
 
         // Next week
-        function nextWeek() {
+        async function nextWeek() {
             if (currentWeekOffset < 0) {
                 currentWeekOffset++;
                 updateWeekDisplay();
-                renderTable();
-                updateDashboard();
+                await renderTable();
+                await updateDashboard();
             }
         }
 
         // Clear week
-        function clearWeek() {
+        async function clearWeek() {
             if (confirm('Are you sure you want to clear all checks for this week? This cannot be undone.')) {
                 const weekId = getWeekId(currentWeekOffset);
-                const weekData = {
-                    habits: Array(28).fill(null).map(() => Array(7).fill(false)),
-                    score: 0
-                };
-                saveWeekData(weekId, weekData);
-                renderTable();
-                updateDashboard();
-            }
-        }
-
-        // Clear all data
-        function clearAllData() {
-            if (confirm('⚠️ WARNING: This will delete ALL your progress across ALL weeks. This cannot be undone. Are you absolutely sure?')) {
-                localStorage.setItem('weeklyData', JSON.stringify({}));
-                renderTable();
-                updateDashboard();
+                const weekData = createEmptyWeekData();
+                currentWeekData = weekData; // Update stored data
+                await saveWeekData(weekId, weekData);
+                await renderTable();
+                await updateDashboard();
             }
         }
 
         // Initialize app
-        function init() {
-            initStorage();
+        async function init() {
             updateWeekDisplay();
-            renderTable();
-            updateDashboard();
+            await renderTable();
+            await updateDashboard();
         }
-
-        init();
     </script>
 </body>
 </html>
