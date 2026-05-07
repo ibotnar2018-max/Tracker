@@ -846,12 +846,15 @@
         auth.onAuthStateChanged(user => {
             if (user) {
                 currentUser = user;
+                console.log('✅ User logged in:', user.email);
+                console.log('User UID:', user.uid);
                 document.getElementById('auth').style.display = 'none';
                 document.getElementById('app').style.display = 'block';
                 document.getElementById('userEmail').textContent = user.email;
                 init();
             } else {
                 currentUser = null;
+                console.log('User logged out');
                 document.getElementById('auth').style.display = 'block';
                 document.getElementById('app').style.display = 'none';
             }
@@ -990,10 +993,27 @@
 
         // Save week data to Firestore
         async function saveWeekData(weekId, weekData) {
-            if (!currentUser) return;
+            if (!currentUser) {
+                console.error('Cannot save: No user logged in');
+                throw new Error('User not authenticated');
+            }
 
-            const docRef = db.collection('users').doc(currentUser.uid).collection('weeks').doc(weekId);
-            await docRef.set(weekData);
+            try {
+                const collectionPath = `users/${currentUser.uid}/weeks`;
+                console.log('Saving to path:', collectionPath, 'with docId:', weekId);
+                
+                const docRef = db.collection('users').doc(currentUser.uid).collection('weeks').doc(weekId);
+                await docRef.set(weekData);
+                
+                console.log('✅ Firebase save successful');
+            } catch (error) {
+                console.error('❌ Firebase save error:', error);
+                console.error('Error code:', error.code);
+                if (error.code === 'permission-denied') {
+                    console.error('Permission denied - check Firestore security rules');
+                }
+                throw error;
+            }
         }
 
         // Calculate score
@@ -1042,30 +1062,47 @@
         // Toggle habit
         async function toggleHabit(habitIndex, dayIndex, weekId) {
             try {
+                if (!currentUser) {
+                    showError('Not logged in. Please refresh and log in again.');
+                    console.error('No user logged in');
+                    return;
+                }
+
                 // Use the passed weekId (which is tied to this specific checkbox)
                 // rather than calculating it, to avoid race conditions
                 if (!weekId) {
                     weekId = getWeekId(currentWeekOffset);
                 }
                 
+                console.log('=== Toggle Habit Start ===');
+                console.log('User:', currentUser.uid);
+                console.log('Week ID:', weekId);
+                console.log('Habit Index:', habitIndex, 'Day Index:', dayIndex);
+                
                 // Toggle in current data
                 currentWeekData.habits[habitIndex][dayIndex] = !currentWeekData.habits[habitIndex][dayIndex];
                 currentWeekData.score = calculateScore(currentWeekData);
                 
-                console.log('Toggled habit:', habitIndex, dayIndex, 'Week:', weekId, 'New score:', currentWeekData.score);
+                console.log('New score:', currentWeekData.score);
+                console.log('Data to save:', JSON.stringify({
+                    habits: currentWeekData.habits.map(h => h.filter(Boolean).length), // show count per habit
+                    score: currentWeekData.score
+                }));
                 
-                // Update UI
-                updateDashboard();
-                
+                // Update UI immediately
+                await updateDashboard();
                 console.log('Dashboard updated');
                 
-                // Save to Firebase
+                // Save to Firebase with detailed error handling
+                console.log('Saving to Firebase...');
                 await saveWeekData(weekId, currentWeekData);
+                console.log('✅ Data saved successfully to Firebase');
                 
-                console.log('Data saved to Firebase for week:', weekId);
             } catch (error) {
-                console.error('Error in toggleHabit:', error);
-                showError('Error: ' + error.message);
+                console.error('❌ Error in toggleHabit:', error);
+                console.error('Error code:', error.code);
+                console.error('Error message:', error.message);
+                showError(`Save failed: ${error.message}. Check console (F12) for details.`);
             }
         }
 
@@ -1265,9 +1302,11 @@
 
         // Initialize app
         async function init() {
+            console.log('=== App Initializing ===');
             updateWeekDisplay();
             await renderTable();
             await updateDashboard();
+            console.log('=== App Initialized ===');
         }
     </script>
 </body>
