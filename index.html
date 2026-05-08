@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Discipline Tracker</title>
-    <link rel="icon" type="image/png" href="logo.png">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Firebase SDK v8 (Compat) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -31,66 +30,79 @@
 
         /* Light Mode */
         body.light-mode {
-            background: #f3f4f6;
+            background: #f9fafb;
             background-image: 
-                radial-gradient(at 0% 0%, rgba(168, 85, 247, 0.08) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.08) 0px, transparent 50%);
-            color: #1f2937;
+                radial-gradient(at 0% 0%, rgba(168, 85, 247, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.12) 0px, transparent 50%);
+            color: #111827;
         }
 
         body.light-mode .week-nav,
         body.light-mode .score-card,
         body.light-mode .chart-card,
         body.light-mode .insight-card,
-        body.light-mode .habits-table,
-        body.light-mode .user-info,
-        body.light-mode .btn-toggle {
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid rgba(0, 0, 0, 0.1);
+        body.light-mode .habits-table {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
         }
 
         body.light-mode .week-info p,
         body.light-mode .score-card h3,
-        body.light-mode .chart-card h3,
-        body.light-mode .habit-item,
-        body.light-mode .user-email,
-        body.light-mode thead th {
-            color: #6b7280;
+        body.light-mode .chart-card h3 {
+            color: #4b5563;
+        }
+
+        body.light-mode .habit-item {
+            color: #374151;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
         }
 
         body.light-mode tbody td:first-child,
         body.light-mode .insight-card h3,
-        body.light-mode .habits-table h3,
-        body.light-mode .header p,
-        body.light-mode .btn-toggle {
-            color: #374151;
-        }
-
-        body.light-mode tbody tr {
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        }
-
-        body.light-mode tbody tr:hover {
-            background: rgba(168, 85, 247, 0.05);
-        }
-
-        body.light-mode thead th {
-            border-bottom: 2px solid rgba(168, 85, 247, 0.3);
-        }
-
-        body.light-mode .form-group input {
-            background: rgba(0, 0, 0, 0.05);
-            border: 1px solid rgba(0, 0, 0, 0.1);
+        body.light-mode .habits-table h3 {
             color: #1f2937;
         }
 
+        body.light-mode .header p {
+            color: #6b7280;
+        }
+
+        body.light-mode tbody tr {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        body.light-mode tbody tr:hover {
+            background: rgba(168, 85, 247, 0.08);
+        }
+
+        body.light-mode thead th {
+            border-bottom: 2px solid rgba(168, 85, 247, 0.4);
+            color: #7c3aed;
+        }
+
+        body.light-mode .form-group input {
+            background: rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            color: #111827;
+        }
+
         body.light-mode .auth-container {
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid rgba(0, 0, 0, 0.12);
         }
 
         body.light-mode .auth-toggle {
-            color: #6b7280;
+            color: #4b5563;
+        }
+
+        body.light-mode .score-comparison {
+            color: #4b5563;
+        }
+
+        /* Light mode chart colors - higher contrast */
+        body.light-mode canvas {
+            filter: brightness(0.95) contrast(1.1);
         }
 
         .container {
@@ -248,37 +260,132 @@
             font-weight: 300;
         }
 
-        .user-info {
+        .user-menu-wrapper {
             position: absolute;
-            top: 60px;
+            top: 0;
             right: 0;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 10px 20px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .btn-toggle {
-            background: rgba(255, 255, 255, 0.1);
+        .menu-button {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             color: #e5e7eb;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 8px 16px;
-            border-radius: 8px;
+            padding: 12px 20px;
+            border-radius: 12px;
             cursor: pointer;
-            font-size: 0.9em;
+            font-size: 1em;
             font-weight: 600;
             transition: all 0.3s;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 10px;
         }
 
-        .btn-toggle:hover {
-            background: rgba(255, 255, 255, 0.15);
+        .menu-button:hover {
+            background: rgba(255, 255, 255, 0.1);
             transform: translateY(-1px);
+        }
+
+        body.light-mode .menu-button {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            color: #1f2937;
+        }
+
+        body.light-mode .menu-button:hover {
+            background: rgba(255, 255, 255, 1);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 60px;
+            right: 0;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 220px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+
+        .dropdown-menu.active {
+            display: flex;
+        }
+
+        body.light-mode .dropdown-menu {
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .menu-item {
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.95em;
+            color: #e5e7eb;
+        }
+
+        body.light-mode .menu-item {
+            color: #1f2937;
+        }
+
+        .menu-item:hover {
+            background: rgba(168, 85, 247, 0.2);
+        }
+
+        body.light-mode .menu-item:hover {
+            background: rgba(168, 85, 247, 0.1);
+        }
+
+        .menu-email {
+            padding: 10px 15px;
+            font-size: 0.85em;
+            color: #9ca3af;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 5px;
+            word-break: break-all;
+        }
+
+        body.light-mode .menu-email {
+            color: #6b7280;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .menu-item-icon {
+            font-size: 1.2em;
+            margin-right: 8px;
+        }
+
+        .menu-logout {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            margin-top: 5px;
+        }
+
+        body.light-mode .menu-logout {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.15);
+            color: #dc2626;
+        }
+
+        .menu-logout:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        body.light-mode .menu-logout:hover {
+            background: rgba(239, 68, 68, 0.15);
         }
 
         .user-email {
@@ -695,10 +802,16 @@
                 font-size: 3.5em;
             }
 
-            .user-info {
+            .user-menu-wrapper {
                 position: static;
-                justify-content: center;
+                text-align: center;
                 margin-top: 20px;
+            }
+
+            .dropdown-menu {
+                left: 50%;
+                transform: translateX(-50%);
+                right: auto;
             }
 
             table {
@@ -798,17 +911,23 @@
             <div class="header">
                 <h1>Everything You Need, All in One Place</h1>
                 <p>Track your discipline. Build your identity.</p>
-                <div class="user-info">
-                    <button class="btn-toggle" onclick="toggleTheme()" id="themeBtn">
-                        <span id="themeIcon">☀️</span>
-                        <span id="themeText">Light</span>
+                <div class="user-menu-wrapper">
+                    <button class="menu-button" onclick="toggleMenu()">
+                        <span>☰</span>
+                        <span>Menu</span>
                     </button>
-                    <button class="btn-toggle" onclick="toggleLanguage()" id="langBtn">
-                        <span id="langFlag">🇬🇧</span>
-                        <span id="langText">EN</span>
-                    </button>
-                    <span class="user-email" id="userEmail"></span>
-                    <button class="btn-logout" onclick="logout()">Logout</button>
+                    <div class="dropdown-menu" id="dropdownMenu">
+                        <div class="menu-email" id="userEmail"></div>
+                        <div class="menu-item" onclick="toggleTheme()">
+                            <span><span class="menu-item-icon" id="themeIcon">☀️</span><span id="themeText">Light Mode</span></span>
+                        </div>
+                        <div class="menu-item" onclick="toggleLanguage()">
+                            <span><span class="menu-item-icon" id="langFlag">🇬🇧</span><span id="langText">English</span></span>
+                        </div>
+                        <div class="menu-item menu-logout" onclick="logout()">
+                            <span><span class="menu-item-icon">🚪</span><span id="logoutText">Logout</span></span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -930,7 +1049,13 @@
                 logout: "Logout",
                 completed: "Completed",
                 remaining: "Remaining",
-                days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+                days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                habit: "Habit",
+                lightMode: "Light Mode",
+                darkMode: "Dark Mode",
+                english: "English",
+                romanian: "Romanian",
+                menu: "Menu"
             },
             ro: {
                 title: "Tot Ce Ai Nevoie, Într-un Singur Loc",
@@ -954,8 +1079,77 @@
                 logout: "Deconectare",
                 completed: "Completat",
                 remaining: "Rămas",
-                days: ["Lun", "Mar", "Mie", "Joi", "Vin", "Sâm", "Dum"]
+                days: ["Lun", "Mar", "Mie", "Joi", "Vin", "Sâm", "Dum"],
+                habit: "Obicei",
+                lightMode: "Mod Luminos",
+                darkMode: "Mod Întunecat",
+                english: "Engleză",
+                romanian: "Română",
+                menu: "Meniu"
             }
+        };
+
+        const habitTranslations = {
+            en: [
+                "Wake up early",
+                "Train your body 4-5x a week",
+                "Cut mindless scrolling in half",
+                "Read 10 pages a day",
+                "Drink more water than you think you need",
+                "Fix your sleep (no phone 30 min before bed)",
+                "Eat like someone who respects themselves",
+                "Take solo walks with no music",
+                "Start saying 'no' without explaining",
+                "Journal your thoughts daily",
+                "Do one uncomfortable thing every day",
+                "Spend less time reacting, more time creating",
+                "Clean your room like it matters (it does)",
+                "Upgrade your style, even slightly",
+                "Talk slower, think sharper",
+                "Build a skill that compounds (content, business, fitness)",
+                "Fix your posture",
+                "Limit junk food, not your standards",
+                "Learn to be alone without feeling lonely",
+                "Protect your energy like it's currency",
+                "Surround yourself with people who move with purpose",
+                "Set clear weekly goals",
+                "Do more than what's expected of you",
+                "Cut excuses instantly",
+                "Show up even on bad days",
+                "Spend time in silence",
+                "Focus on discipline over motivation",
+                "Become someone you would respect"
+            ],
+            ro: [
+                "Trezește-te devreme",
+                "Antrenează-ți corpul de 4-5 ori pe săptămână",
+                "Reduceți la jumătate scrollingul fără sens",
+                "Citește 10 pagini pe zi",
+                "Bea mai multă apă decât crezi că ai nevoie",
+                "Repară-ți somnul (fără telefon cu 30 min înainte de culcare)",
+                "Mănâncă ca cineva care se respectă",
+                "Fă plimbări solo fără muzică",
+                "Începe să spui 'nu' fără să explici",
+                "Scrie-ți gândurile zilnic în jurnal",
+                "Fă câte un lucru incomod în fiecare zi",
+                "Petrece mai puțin timp reacționând, mai mult creând",
+                "Curăță-ți camera de parcă ar conta (contează)",
+                "Îmbunătățește-ți stilul, chiar și ușor",
+                "Vorbește mai încet, gândește mai ascuțit",
+                "Construiește o abilitate care se acumulează (conținut, afaceri, fitness)",
+                "Corectează-ți postura",
+                "Limitează mâncarea nesănătoasă, nu standardele tale",
+                "Învață să fii singur fără să te simți singur",
+                "Protejează-ți energia ca și cum ar fi monedă",
+                "Înconjoară-te de oameni care se mișcă cu scop",
+                "Stabilește obiective săptămânale clare",
+                "Fă mai mult decât se așteaptă de la tine",
+                "Taie scuzele instant",
+                "Apari chiar și în zilele proaste",
+                "Petrece timp în tăcere",
+                "Concentrează-te pe disciplină în loc de motivație",
+                "Devino cineva pe care l-ai respecta"
+            ]
         };
 
         // Toggle theme
@@ -963,17 +1157,19 @@
             currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
             localStorage.setItem('theme', currentTheme);
             applyTheme();
+            document.getElementById('dropdownMenu').classList.remove('active');
         }
 
         function applyTheme() {
+            const t = translations[currentLanguage];
             if (currentTheme === 'light') {
                 document.body.classList.add('light-mode');
                 document.getElementById('themeIcon').textContent = '🌙';
-                document.getElementById('themeText').textContent = 'Dark';
+                document.getElementById('themeText').textContent = t.darkMode;
             } else {
                 document.body.classList.remove('light-mode');
                 document.getElementById('themeIcon').textContent = '☀️';
-                document.getElementById('themeText').textContent = 'Light';
+                document.getElementById('themeText').textContent = t.lightMode;
             }
         }
 
@@ -981,7 +1177,10 @@
         function toggleLanguage() {
             currentLanguage = currentLanguage === 'en' ? 'ro' : 'en';
             localStorage.setItem('language', currentLanguage);
+            habits = habitTranslations[currentLanguage]; // Update habits array
             applyLanguage();
+            renderTable(); // Re-render table with translated habits
+            document.getElementById('dropdownMenu').classList.remove('active');
         }
 
         function applyLanguage() {
@@ -997,6 +1196,9 @@
             document.getElementById('prevBtn').innerHTML = '← ' + t.previous;
             document.getElementById('nextBtn').innerHTML = t.next + ' →';
             
+            // Update menu button
+            document.querySelector('.menu-button span:last-child').textContent = t.menu;
+            
             // Update insight cards
             document.querySelector('.insight-card:nth-child(1) h3').innerHTML = '<span class="emoji">🏆</span> ' + t.whereExcel;
             document.querySelector('.insight-card:nth-child(2) h3').innerHTML = '<span class="emoji">⚠️</span> ' + t.needsAttention;
@@ -1004,7 +1206,7 @@
             
             // Update table headers
             const headers = document.querySelectorAll('thead th');
-            headers[0].textContent = currentLanguage === 'en' ? 'Habit' : 'Obicei';
+            headers[0].textContent = t.habit;
             t.days.forEach((day, i) => {
                 if (headers[i + 1]) headers[i + 1].textContent = day;
             });
@@ -1012,50 +1214,43 @@
             // Update language button
             if (currentLanguage === 'ro') {
                 document.getElementById('langFlag').textContent = '🇷🇴';
-                document.getElementById('langText').textContent = 'RO';
+                document.getElementById('langText').textContent = t.romanian;
             } else {
                 document.getElementById('langFlag').textContent = '🇬🇧';
-                document.getElementById('langText').textContent = 'EN';
+                document.getElementById('langText').textContent = t.english;
             }
             
             // Update logout button
-            document.querySelector('.btn-logout').textContent = t.logout;
+            document.getElementById('logoutText').textContent = t.logout;
             
-            // Update comparison if exists
-            updateDashboard();
+            // Update theme button text
+            applyTheme();
+            
+            // Update chart labels
+            if (chart) {
+                chart.data.labels = [t.completed, t.remaining];
+                chart.update();
+            }
         }
 
-        // All 28 habits
-        const habits = [
-            "Wake up early",
-            "Train your body 4-5x a week",
-            "Cut mindless scrolling in half",
-            "Read 10 pages a day",
-            "Drink more water than you think you need",
-            "Fix your sleep (no phone 30 min before bed)",
-            "Eat like someone who respects themselves",
-            "Take solo walks with no music",
-            "Start saying 'no' without explaining",
-            "Journal your thoughts daily",
-            "Do one uncomfortable thing every day",
-            "Spend less time reacting, more time creating",
-            "Clean your room like it matters (it does)",
-            "Upgrade your style, even slightly",
-            "Talk slower, think sharper",
-            "Build a skill that compounds (content, business, fitness)",
-            "Fix your posture",
-            "Limit junk food, not your standards",
-            "Learn to be alone without feeling lonely",
-            "Protect your energy like it's currency",
-            "Surround yourself with people who move with purpose",
-            "Set clear weekly goals",
-            "Do more than what's expected of you",
-            "Cut excuses instantly",
-            "Show up even on bad days",
-            "Spend time in silence",
-            "Focus on discipline over motivation",
-            "Become someone you would respect"
-        ];
+        // All 28 habits - now dynamic based on language
+        let habits = habitTranslations[currentLanguage];
+
+        // Toggle menu
+        function toggleMenu() {
+            const menu = document.getElementById('dropdownMenu');
+            menu.classList.toggle('active');
+        }
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('dropdownMenu');
+            const menuButton = document.querySelector('.menu-button');
+            
+            if (menu && menuButton && !menu.contains(event.target) && !menuButton.contains(event.target)) {
+                menu.classList.remove('active');
+            }
+        });
 
         // Auth State Observer
         auth.onAuthStateChanged(user => {
@@ -1413,6 +1608,7 @@
         // Update chart
         function updateChart(score) {
             const ctx = document.getElementById('progressChart').getContext('2d');
+            const t = translations[currentLanguage];
             
             if (chart) {
                 chart.destroy();
@@ -1421,7 +1617,7 @@
             chart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Completed', 'Remaining'],
+                    labels: [t.completed, t.remaining],
                     datasets: [{
                         data: [score, 100 - score],
                         backgroundColor: [
@@ -1494,26 +1690,45 @@
         // Update tips
         function updateTips(score) {
             const tips = {
-                low: [
-                    "Progress isn't linear. Focus on just 5 habits this week and master them. Small wins build momentum.",
-                    "The scoreboard doesn't lie. Track everything. Every checkbox is a vote for the person you're becoming.",
-                    "Start with one habit. Master it. Then add another. Rome wasn't built in a day."
-                ],
-                medium: [
-                    "You're building consistency. The difference between average and excellent is showing up on the hard days. Keep going.",
-                    "Motivation fades. Discipline compounds. You're in the grind now—this is where winners are made.",
-                    "Comparison is with yesterday's version of yourself. You're ahead of where you were last week."
-                ],
-                high: [
-                    "You're in the top tier. This is what transformation looks like. Discipline is becoming your identity.",
-                    "Excellence is a habit. You're proving that every single day. Don't stop now—this is momentum.",
-                    "You're not tracking habits anymore. You're building identity. Keep showing up like this."
-                ]
+                en: {
+                    low: [
+                        "Progress isn't linear. Focus on just 5 habits this week and master them. Small wins build momentum.",
+                        "The scoreboard doesn't lie. Track everything. Every checkbox is a vote for the person you're becoming.",
+                        "Start with one habit. Master it. Then add another. Rome wasn't built in a day."
+                    ],
+                    medium: [
+                        "You're building consistency. The difference between average and excellent is showing up on the hard days. Keep going.",
+                        "Motivation fades. Discipline compounds. You're in the grind now—this is where winners are made.",
+                        "Comparison is with yesterday's version of yourself. You're ahead of where you were last week."
+                    ],
+                    high: [
+                        "You're in the top tier. This is what transformation looks like. Discipline is becoming your identity.",
+                        "Excellence is a habit. You're proving that every single day. Don't stop now—this is momentum.",
+                        "You're not tracking habits anymore. You're building identity. Keep showing up like this."
+                    ]
+                },
+                ro: {
+                    low: [
+                        "Progresul nu este liniar. Concentrează-te doar pe 5 obiceiuri săptămâna aceasta și stăpânește-le. Victoriile mici construiesc impulsul.",
+                        "Tabla de scor nu minte. Urmărește totul. Fiecare bifă este un vot pentru persoana pe care devii.",
+                        "Începe cu un obicei. Stăpânește-l. Apoi adaugă altul. Roma nu a fost construită într-o zi."
+                    ],
+                    medium: [
+                        "Construiești consecvență. Diferența între mediu și excelent este să apari în zilele grele. Continuă.",
+                        "Motivația dispare. Disciplina se acumulează. Ești în muncă acum—aici sunt făcuți câștigătorii.",
+                        "Comparația este cu versiunea ta de ieri. Ești înainte de unde ai fost săptămâna trecută."
+                    ],
+                    high: [
+                        "Ești în top. Așa arată transformarea. Disciplina devine identitatea ta.",
+                        "Excelența este un obicei. O dovedești în fiecare zi. Nu te opri acum—acesta este impulsul.",
+                        "Nu mai urmărești obiceiuri. Construiești identitate. Continuă să apari așa."
+                    ]
+                }
             };
 
-            let tipArray = tips.low;
-            if (score > 75) tipArray = tips.high;
-            else if (score >= 50) tipArray = tips.medium;
+            let tipArray = tips[currentLanguage].low;
+            if (score > 75) tipArray = tips[currentLanguage].high;
+            else if (score >= 50) tipArray = tips[currentLanguage].medium;
 
             const randomTip = tipArray[Math.floor(Math.random() * tipArray.length)];
             document.getElementById('motivationalTip').textContent = randomTip;
@@ -1552,7 +1767,8 @@
 
         // Clear week
         async function clearWeek() {
-            if (confirm('Are you sure you want to clear all checks for this week? This cannot be undone.')) {
+            const t = translations[currentLanguage];
+            if (confirm(t.clearConfirm)) {
                 const weekId = getWeekId(currentWeekOffset);
                 const weekData = createEmptyWeekData();
                 currentWeekData = weekData; // Update stored data
@@ -1564,6 +1780,8 @@
 
         // Initialize app
         async function init() {
+            applyTheme();
+            applyLanguage();
             updateWeekDisplay();
             await renderTable();
             await updateDashboard();
