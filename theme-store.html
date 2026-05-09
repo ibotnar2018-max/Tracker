@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Store - Discipline Tracker</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: rgba(255, 255, 255, 0.05);
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --bg-hover: rgba(168, 85, 247, 0.1);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-primary: #e5e7eb;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --accent-primary: #a855f7;
+            --accent-secondary: #ec4899;
+            --gradient-start: #a855f7;
+            --gradient-end: #ec4899;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 40px 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+        }
+
+        .auth-container {
+            max-width: 400px;
+            margin: 0 auto 40px;
+            padding: 30px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+        }
+
+        .auth-container h3 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .auth-container input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .auth-container button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border: none;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .auth-toggle {
+            text-align: center;
+            margin-top: 15px;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .auth-toggle a {
+            color: var(--accent-primary);
+            cursor: pointer;
+        }
+
+        .account-option:hover {
+            background: var(--bg-hover);
+        }
+
+        .error-message {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+
+        .user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .user-info .user-details {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .user-info button {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .profile-section {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .profile-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .profile-tab {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .profile-tab.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        .back-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            text-decoration: none;
+            margin-bottom: 30px;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            background: var(--bg-hover);
+        }
+
+        .search-bar {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto 40px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 14px 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 1em;
+        }
+
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .theme-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .theme-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px var(--shadow-color);
+            border-color: var(--accent-primary);
+        }
+
+        .theme-preview {
+            height: 120px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .theme-preview-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+        }
+
+        .theme-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .theme-author {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .theme-description {
+            color: var(--text-muted);
+            font-size: 0.85em;
+            margin-bottom: 12px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .theme-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .theme-tag {
+            font-size: 0.75em;
+            padding: 4px 10px;
+            background: var(--bg-hover);
+            border-radius: 20px;
+            color: var(--text-secondary);
+        }
+
+        .no-themes {
+            text-align: center;
+            padding: 60px;
+            color: var(--text-secondary);
+        }
+
+        .submit-btn {
+            display: block;
+            width: 200px;
+            margin: 40px auto 0;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--shadow-color);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            backdrop-filter: blur(30px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-header h2 {
+            font-size: 1.3em;
+        }
+
+        .modal-close {
+            background: var(--bg-secondary);
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5em;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .form-group {
+            padding: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 1em;
+            margin-bottom: 15px;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .banner-preview {
+            width: 100%;
+            height: 120px;
+            border-radius: 12px;
+            background: var(--bg-secondary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            overflow: hidden;
+        }
+
+        .banner-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .upload-btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Account Button -->
+    <button id="accountBtn" onclick="toggleAccountPanel()" style="position: fixed; top: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; border: none; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 1.5em; cursor: pointer; z-index: 9999;">👤</button>
+
+    <!-- Account Dropdown Panel -->
+    <div id="accountPanel" class="account-panel" style="display: none; position: fixed; top: 75px; right: 20px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; min-width: 200px; z-index: 9998; box-shadow: 0 8px 24px var(--shadow-color);">
+        <div id="userEmail" style="font-size: 0.85em; color: var(--text-secondary); margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);"></div>
+        <div class="account-option" onclick="showMyThemes()" style="padding: 10px; cursor: pointer; border-radius: 8px; color: var(--text-primary);">📂 My Themes</div>
+        <div class="account-option" onclick="showLikedThemes()" style="padding: 10px; cursor: pointer; border-radius: 8px; color: var(--text-primary);">❤️ Liked Themes</div>
+        <div class="account-option" onclick="handleLogout()" style="padding: 10px; cursor: pointer; border-radius: 8px; color: #ef4444;">🚪 Logout</div>
+    </div>
+
+    <div class="container">
+        <a href="theme-creator.html" class="back-btn">← Back to Theme Creator</a>
+        
+        <h1>🎨 Theme Store</h1>
+        <p class="subtitle">Discover and download themes created by the community</p>
+
+        <!-- Auth Container -->
+        <div id="authContainer" class="auth-container" style="display: none;">
+            <div id="authError" class="error-message" style="display: none;"></div>
+            
+            <div id="loginForm">
+                <h3>Sign In</h3>
+                <input type="email" id="loginEmail" placeholder="Email">
+                <input type="password" id="loginPassword" placeholder="Password">
+                <button onclick="handleLogin(event)">Sign In</button>
+                <div class="auth-toggle">
+                    Don't have an account? <a onclick="showAuth(false)">Sign Up</a>
+                </div>
+            </div>
+            
+            <div id="signupForm" style="display: none;">
+                <h3>Create Account</h3>
+                <input type="email" id="signupEmail" placeholder="Email">
+                <input type="password" id="signupPassword" placeholder="Password">
+                <button onclick="handleSignup(event)">Sign Up</button>
+                <div class="auth-toggle">
+                    Already have an account? <a onclick="showAuth(true)">Sign In</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="🔍 Search themes..." onkeyup="filterThemes()">
+        </div>
+
+        <div id="themeGrid" class="theme-grid">
+            <!-- Themes will be loaded here -->
+        </div>
+
+        <button type="button" class="submit-btn" onclick="openSubmitModal()">➕ Submit Theme</button>
+    </div>
+
+    <div id="submitModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📤 Submit Your Theme</h2>
+                <button class="modal-close" onclick="closeSubmitModal()">×</button>
+            </div>
+            <div class="form-group">
+                <label>Upload Theme File (JSON) *</label>
+                <input type="file" id="themeFile" accept=".json" onchange="previewThemeFile()" style="margin-bottom: 15px;">
+                
+                <label>Banner Image (optional - upload or enter URL)</label>
+                <input type="file" id="bannerFile" accept="image/*" onchange="handleBannerUpload()" style="margin-bottom: 10px;">
+                <input type="text" id="bannerUrl" placeholder="Or enter image URL" oninput="previewBanner()">
+                <div id="bannerPreview" class="banner-preview">
+                    <span>Banner preview</span>
+                </div>
+                
+                <label>Theme Name *</label>
+                <input type="text" id="themeName" placeholder="My Awesome Theme">
+                
+                <label>Author Name</label>
+                <input type="text" id="authorName" placeholder="Your name">
+                
+                <label>Description</label>
+                <textarea id="themeDescription" placeholder="What makes your theme special?"></textarea>
+                
+                <label>Tags (comma separated)</label>
+                <input type="text" id="themeTags" placeholder="dark, purple, neon, minimal">
+                
+                <button type="button" class="upload-btn" id="submitBtn">🚀 Submit Theme</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="profileModalTitle">My Themes</h2>
+                <button class="modal-close" onclick="closeProfileModal()">×</button>
+            </div>
+            <div class="profile-tabs" style="display: flex; gap: 10px; padding: 15px; border-bottom: 1px solid var(--border-color);">
+                <button class="profile-tab active" id="tabMyThemes" onclick="showProfileTab('my')">📂 My Themes</button>
+                <button class="profile-tab" id="tabLikedThemes" onclick="showProfileTab('liked')">❤️ Liked Themes</button>
+            </div>
+            <div id="profileThemesGrid" class="theme-grid" style="padding: 20px; max-height: 60vh; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDZ025kEy2N6WtCBEYPPrtWR8qW-tLvZ-w",
+            authDomain: "tracker-14cc6.firebaseapp.com",
+            projectId: "tracker-14cc6",
+            storageBucket: "tracker-14cc6.firebasestorage.app",
+            messagingSenderId: "172277195199",
+            appId: "1:172277195199:web:1677fa833efc934d9c410a",
+            measurementId: "G-FT4DBTC2V0"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let currentUser = null;
+        let allThemes = [];
+        let likedThemes = [];
+        let loadedThemeData = null;
+        let bannerDataUrl = '';
+
+        // Auth Functions
+        function showAuth(showLogin) {
+            document.getElementById('authContainer').style.display = 'block';
+            document.getElementById('loginForm').style.display = showLogin ? 'block' : 'none';
+            document.getElementById('signupForm').style.display = showLogin ? 'none' : 'block';
+            document.getElementById('authError').style.display = 'none';
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+            } catch (error) {
+                document.getElementById('authError').textContent = error.message;
+                document.getElementById('authError').style.display = 'block';
+            }
+        }
+
+        async function handleSignup(e) {
+            e.preventDefault();
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            
+            try {
+                await auth.createUserWithEmailAndPassword(email, password);
+            } catch (error) {
+                document.getElementById('authError').textContent = error.message;
+                document.getElementById('authError').style.display = 'block';
+            }
+        }
+
+        async function handleLogout() {
+            await auth.signOut();
+        }
+
+        // Auth State Listener
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('authContainer').style.display = 'none';
+                document.getElementById('userEmail').textContent = user.email;
+                document.getElementById('accountBtn').textContent = user.email.charAt(0).toUpperCase();
+                
+                // Load user's liked themes
+                await loadUserLikes();
+                loadThemes();
+            } else {
+                currentUser = null;
+                document.getElementById('authContainer').style.display = 'block';
+                document.getElementById('accountBtn').textContent = '👤';
+                loadThemes();
+            }
+        });
+
+        function toggleAccountPanel() {
+            const panel = document.getElementById('accountPanel');
+            if (!currentUser) {
+                panel.style.display = 'none';
+                showAuth(true);
+                return;
+            }
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            document.getElementById('userEmail').textContent = currentUser.email;
+        }
+
+        function showMyThemes() {
+            document.getElementById('accountPanel').style.display = 'none';
+            document.getElementById('profileModal').classList.add('show');
+            showProfileTab('my');
+        }
+
+        function showLikedThemes() {
+            document.getElementById('accountPanel').style.display = 'none';
+            document.getElementById('profileModal').classList.add('show');
+            showProfileTab('liked');
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').classList.remove('show');
+        }
+
+        async function handleLogout() {
+            document.getElementById('accountPanel').style.display = 'none';
+            await auth.signOut();
+            currentUser = null;
+            document.getElementById('accountBtn').textContent = '👤';
+            loadThemes();
+        }
+
+        // Load themes from Firestore
+        async function loadThemes() {
+            try {
+                console.log('Loading themes from Firestore...');
+                const snapshot = await db.collection('themes').orderBy('submittedAt', 'desc').get();
+                allThemes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                console.log('Loaded from Firestore:', allThemes.length, 'themes');
+                renderThemes(allThemes);
+            } catch (error) {
+                console.log('Using local themes:', error);
+                const storeThemes = JSON.parse(localStorage.getItem('storeThemes') || '[]');
+                console.log('Loaded from localStorage:', storeThemes.length, 'themes');
+                renderThemes(storeThemes);
+            }
+        }
+
+        // Load user's liked themes
+        async function loadUserLikes() {
+            if (!currentUser) return;
+            try {
+                const snapshot = await db.collection('users').doc(currentUser.uid).collection('likes').get();
+                likedThemes = snapshot.docs.map(doc => doc.id);
+            } catch (error) {
+                likedThemes = [];
+            }
+        }
+
+        // Show profile tab
+        function showProfileTab(tab) {
+            document.getElementById('tabMyThemes').classList.remove('active');
+            document.getElementById('tabLikedThemes').classList.remove('active');
+
+            const grid = document.getElementById('profileThemesGrid');
+            
+            if (tab === 'my') {
+                document.getElementById('tabMyThemes').classList.add('active');
+                document.getElementById('profileModalTitle').textContent = '📂 My Themes';
+                const myThemes = allThemes.filter(t => t.authorId === currentUser?.uid);
+                renderProfileThemes(myThemes, grid);
+            } else {
+                document.getElementById('tabLikedThemes').classList.add('active');
+                document.getElementById('profileModalTitle').textContent = '❤️ Liked Themes';
+                const liked = allThemes.filter(t => likedThemes.includes(t.id));
+                renderProfileThemes(liked, grid);
+            }
+        }
+
+        function renderProfileThemes(themes, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            if (themes.length === 0) {
+                container.innerHTML = '<div class="no-themes">No themes found</div>';
+                return;
+            }
+            themes.forEach(theme => {
+                const bgColor = theme.colors?.['--bg-primary'] || '#0a0a0f';
+                const accentColor = theme.colors?.['--accent-primary'] || '#a855f7';
+                container.innerHTML += `
+                    <div class="theme-card">
+                        <div class="theme-preview" style="background: ${bgColor};">
+                            <div class="theme-preview-circle" style="background: ${accentColor};"></div>
+                        </div>
+                        <div class="theme-title">${theme.name}</div>
+                        <div class="theme-author">by ${theme.author}</div>
+                    </div>
+                `;
+            });
+        }
+
+        // Toggle like
+        async function toggleLike(themeId) {
+            if (!currentUser) {
+                showAuth(true);
+                return;
+            }
+
+            const likeRef = db.collection('users').doc(currentUser.uid).collection('likes').doc(themeId);
+            
+            if (likedThemes.includes(themeId)) {
+                await likeRef.delete();
+                likedThemes = likedThemes.filter(id => id !== themeId);
+            } else {
+                await likeRef.set({ likedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                likedThemes.push(themeId);
+            }
+            
+            loadThemes();
+        }
+
+        function renderThemes(themes) {
+            const grid = document.getElementById('themeGrid');
+            grid.innerHTML = '';
+
+            if (themes.length === 0) {
+                grid.innerHTML = '<div class="no-themes">No themes found. Be the first to submit!</div>';
+                return;
+            }
+
+            themes.forEach((theme, index) => {
+                const card = document.createElement('div');
+                card.className = 'theme-card';
+                card.onclick = () => downloadTheme(index);
+
+                const bgColor = theme.colors?.['--bg-primary'] || '#0a0a0f';
+                const accentColor = theme.colors?.['--accent-primary'] || '#a855f7';
+
+                card.innerHTML = `
+                    <div class="theme-preview" style="background: ${bgColor};">
+                        <div class="theme-preview-circle" style="background: ${accentColor};"></div>
+                    </div>
+                    <div class="theme-title">${theme.name}</div>
+                    <div class="theme-author">by ${theme.author || 'Anonymous'}</div>
+                    ${theme.description ? `<div class="theme-description">${theme.description}</div>` : ''}
+                    ${theme.tags ? `<div class="theme-tags">
+                        ${theme.tags.slice(0, 4).map(tag => `<span class="theme-tag">${tag}</span>`).join('')}
+                    </div>` : ''}
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterThemes() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allThemes.filter(theme => {
+                const titleMatch = theme.name?.toLowerCase().includes(search);
+                const authorMatch = theme.author?.toLowerCase().includes(search);
+                const tagMatch = theme.tags?.some(t => t.toLowerCase().includes(search));
+                return titleMatch || authorMatch || tagMatch;
+            });
+            renderThemes(filtered);
+        }
+
+        function downloadTheme(index) {
+            const theme = allThemes[index];
+            if (!theme) return;
+
+            const themeJson = {
+                name: theme.name,
+                colors: theme.colors,
+                dark: theme.dark,
+                light: theme.light,
+                banner: theme.banner,
+                displayName: theme.name
+            };
+
+            const json = JSON.stringify(themeJson, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = theme.name.toLowerCase().replace(/\s+/g, '-') + '.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Initial load
+        loadThemes();
+
+        function openSubmitModal() {
+            console.log('Opening modal...');
+            document.getElementById('submitModal').classList.add('show');
+            console.log('Modal should be open now');
+            document.getElementById('themeFile').value = '';
+            document.getElementById('bannerFile').value = '';
+            document.getElementById('bannerUrl').value = '';
+            document.getElementById('themeName').value = '';
+            document.getElementById('authorName').value = '';
+            document.getElementById('themeDescription').value = '';
+            document.getElementById('themeTags').value = '';
+            document.getElementById('bannerPreview').innerHTML = '<span>Banner preview</span>';
+            loadedThemeData = null;
+            bannerDataUrl = '';
+        }
+
+        function closeSubmitModal() {
+            document.getElementById('submitModal').classList.remove('show');
+        }
+
+        function previewThemeFile() {
+            const file = document.getElementById('themeFile').files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    loadedThemeData = JSON.parse(e.target.result);
+                    console.log('Theme file loaded:', loadedThemeData);
+                    if (!document.getElementById('themeName').value && loadedThemeData.name) {
+                        document.getElementById('themeName').value = loadedThemeData.name;
+                    }
+                } catch (err) {
+                    console.error('Error parsing theme file:', err);
+                    alert('Invalid theme file: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function previewBanner() {
+            const url = document.getElementById('bannerUrl').value;
+            const preview = document.getElementById('bannerPreview');
+            if (url) {
+                preview.innerHTML = `<img src="${url}" onerror="this.parentElement.innerHTML='Invalid image URL'">`;
+            } else {
+                preview.innerHTML = '<span>Banner preview</span>';
+            }
+        }
+
+        function handleBannerUpload() {
+            const file = document.getElementById('bannerFile').files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                bannerDataUrl = e.target.result;
+                const preview = document.getElementById('bannerPreview');
+                preview.innerHTML = `<img src="${bannerDataUrl}">`;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function submitTheme() {
+            console.log('submitTheme called');
+            const themeFile = document.getElementById('themeFile').files[0];
+            const name = document.getElementById('themeName').value.trim();
+            const author = document.getElementById('authorName').value.trim();
+            const description = document.getElementById('themeDescription').value.trim();
+            const tags = document.getElementById('themeTags').value.trim();
+            const bannerUrl = document.getElementById('bannerUrl').value.trim();
+            const banner = bannerDataUrl || bannerUrl;
+            
+            console.log('themeFile:', !!themeFile, 'name:', name, 'loadedThemeData:', !!loadedThemeData);
+
+            if (!themeFile) {
+                alert('Please upload a theme JSON file');
+                return;
+            }
+
+            if (!name) {
+                alert('Please enter a theme name');
+                return;
+            }
+
+            if (!loadedThemeData) {
+                alert('Theme file not loaded. Please try uploading again.');
+                return;
+            }
+
+            const darkData = loadedThemeData.dark || loadedThemeData.colors || loadedThemeData;
+            const lightData = loadedThemeData.light || loadedThemeData.dark || loadedThemeData.colors || darkData;
+
+            const newTheme = {
+                name: name,
+                author: author || currentUser?.email?.split('@')[0] || 'Anonymous',
+                authorId: currentUser?.uid || null,
+                description: description,
+                tags: tags ? tags.split(',').map(t => t.trim()).filter(t => t) : [],
+                banner: banner,
+                dark: darkData,
+                light: lightData,
+                submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+                // Save to Firestore if logged in, otherwise localStorage
+                console.log('Submitting theme, logged in:', !!currentUser);
+                console.log('Theme data:', newTheme);
+                
+                if (currentUser) {
+                    const docRef = await db.collection('themes').add(newTheme);
+                    console.log('Theme saved to Firestore, ID:', docRef.id);
+                } else {
+                    newTheme.submittedAt = new Date().toISOString();
+                    const storeThemes = JSON.parse(localStorage.getItem('storeThemes') || '[]');
+                    storeThemes.unshift(newTheme);
+                    localStorage.setItem('storeThemes', JSON.stringify(storeThemes));
+                    console.log('Theme saved to localStorage');
+                }
+
+                closeSubmitModal();
+                loadThemes();
+                alert('Theme submitted successfully!');
+            } catch (error) {
+                console.error('Error submitting theme:', error);
+                alert('Error submitting theme: ' + error.message);
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            const modal = document.getElementById('submitModal');
+            if (modal.classList.contains('show') && !modal.querySelector('.modal-content').contains(e.target)) {
+                closeSubmitModal();
+            }
+        });
+
+        // Submit button click handler
+        document.getElementById('submitBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Submit button clicked');
+            submitTheme();
+        });
+    </script>
+</body>
+</html>
