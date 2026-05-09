@@ -596,7 +596,12 @@
 <body>
     <div class="sidebar" style="padding-top: 0;">
         <div style="background: rgba(234, 179, 8, 0.15); border: 1px solid rgba(234, 179, 8, 0.4); padding: 10px 16px; text-align: center; color: #fde047; font-size: 0.8em; border-radius: 8px; margin-bottom: 15px;">
-            ⚠️ <strong>Important:</strong> Before going to the Theme Store, please click "Export JSON" to save your theme file. You'll need it when submitting!
+            ⚠️ <strong>Important:</strong> Before going to the Theme Store, please click "Export JSON" to save your theme file. You'll need it when submitting!                 Also when using presets, first chose the light/dark theme and then the preset.
+        </div>
+        
+        <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+            <button id="darkModeBtn" onclick="setMode('dark')" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); cursor: pointer; font-size: 0.9em;">🌙 Dark</button>
+            <button id="lightModeBtn" onclick="setMode('light')" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); cursor: pointer; font-size: 0.9em;">☀️ Light</button>
         </div>
         
         <div class="card" style="margin-bottom: 15px;">
@@ -997,6 +1002,7 @@
         
         // Flag to know if we've initialized
         let themeInitialized = false;
+        let selectedPreset = 'dark';
 
         function setMode(mode) {
             // Always save current mode's current values before switching
@@ -1027,8 +1033,9 @@
             if (hasSavedData) {
                 loadThemeData(savedData);
             } else {
-                // Load the preset and save its values to themeData
-                loadPreset(mode);
+                // Load the currently selected preset for the new mode
+                const presetToLoad = selectedPreset || 'dark';
+                loadPreset(presetToLoad);
             }
         }
 
@@ -1107,7 +1114,45 @@
                 "--logo-size": "40px",
                 "--icon-emoji": "📊",
                 "--theme-display-name": "Dark Purple",
-                "--theme-banner": "none"
+                "--theme-banner": "none",
+                light: {
+                    name: "Light Purple",
+                    "--bg-primary": "#faf5ff",
+                    "--bg-secondary": "rgba(168, 85, 247, 0.08)",
+                    "--bg-card": "rgba(255, 255, 255, 0.95)",
+                    "--bg-hover": "rgba(168, 85, 247, 0.12)",
+                    "--border-color": "rgba(168, 85, 247, 0.2)",
+                    "--text-primary": "#1f2937",
+                    "--text-secondary": "#4b5563",
+                    "--text-muted": "#9ca3af",
+                    "--accent-primary": "#a855f7",
+                    "--accent-secondary": "#ec4899",
+                    "--gradient-start": "#a855f7",
+                    "--gradient-end": "#ec4899",
+                    "--shadow-color": "rgba(168, 85, 247, 0.15)",
+                    "--blur-amount": "10px",
+                    "--radial-gradient-1": "radial-gradient(at 0% 0%, rgba(168, 85, 247, 0.08) 0px, transparent 50%)",
+                    "--radial-gradient-2": "radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.08) 0px, transparent 50%)",
+                    "--border-radius": "16px",
+                    "--button-radius": "10px",
+                    "--input-radius": "8px",
+                    "--checkbox-size": "20px",
+                    "--font-family": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                    "--title-size": "3.5em",
+                    "--subtitle-size": "1.3em",
+                    "--score-size": "4.5em",
+                    "--body-size": "0.95em",
+                    "--bg-image": "none",
+                    "--bg-image-size": "cover",
+                    "--bg-image-position": "center center",
+                    "--bg-image-blend": "overlay",
+                    "--bg-overlay-color": "rgba(168, 85, 247, 0.1)",
+                    "--logo-image": "none",
+                    "--logo-size": "40px",
+                    "--icon-emoji": "☀️",
+                    "--theme-display-name": "Light Purple",
+                    "--theme-banner": "none"
+                }
             },
             ocean: {
                 name: "Ocean Blue",
@@ -1143,7 +1188,43 @@
                 "--bg-overlay-color": "rgba(0, 0, 0, 0.5)",
                 "--logo-image": "none",
                 "--logo-size": "40px",
-                "--icon-emoji": "🌊"
+                "--icon-emoji": "🌊",
+                light: {
+                    name: "Ocean Light",
+                    "--bg-primary": "#f0f9ff",
+                    "--bg-secondary": "rgba(56, 189, 248, 0.1)",
+                    "--bg-card": "rgba(255, 255, 255, 0.95)",
+                    "--bg-hover": "rgba(56, 189, 248, 0.15)",
+                    "--border-color": "rgba(56, 189, 248, 0.2)",
+                    "--text-primary": "#0c4a6e",
+                    "--text-secondary": "#0369a1",
+                    "--text-muted": "#38bdf8",
+                    "--accent-primary": "#0284c7",
+                    "--accent-secondary": "#0ea5e9",
+                    "--gradient-start": "#0284c7",
+                    "--gradient-end": "#0ea5e9",
+                    "--shadow-color": "rgba(56, 189, 248, 0.2)",
+                    "--blur-amount": "10px",
+                    "--radial-gradient-1": "radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.1) 0px, transparent 50%)",
+                    "--radial-gradient-2": "radial-gradient(at 100% 100%, rgba(14, 165, 233, 0.08) 0px, transparent 50%)",
+                    "--border-radius": "16px",
+                    "--button-radius": "10px",
+                    "--input-radius": "8px",
+                    "--checkbox-size": "20px",
+                    "--font-family": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                    "--title-size": "3.5em",
+                    "--subtitle-size": "1.3em",
+                    "--score-size": "4.5em",
+                    "--body-size": "0.95em",
+                    "--bg-image": "none",
+                    "--bg-image-size": "cover",
+                    "--bg-image-position": "center center",
+                    "--bg-image-blend": "overlay",
+                    "--bg-overlay-color": "rgba(56, 189, 248, 0.1)",
+                    "--logo-image": "none",
+                    "--logo-size": "40px",
+                    "--icon-emoji": "🌊"
+                }
             },
             emerald: {
                 name: "Emerald",
@@ -1179,7 +1260,43 @@
                 "--bg-overlay-color": "rgba(0, 0, 0, 0.5)",
                 "--logo-image": "none",
                 "--logo-size": "40px",
-                "--icon-emoji": "💚"
+                "--icon-emoji": "💚",
+                light: {
+                    name: "Emerald Light",
+                    "--bg-primary": "#ecfdf5",
+                    "--bg-secondary": "rgba(16, 185, 129, 0.1)",
+                    "--bg-card": "rgba(255, 255, 255, 0.95)",
+                    "--bg-hover": "rgba(16, 185, 129, 0.15)",
+                    "--border-color": "rgba(16, 185, 129, 0.2)",
+                    "--text-primary": "#064e3b",
+                    "--text-secondary": "#047857",
+                    "--text-muted": "#10b981",
+                    "--accent-primary": "#059669",
+                    "--accent-secondary": "#10b981",
+                    "--gradient-start": "#059669",
+                    "--gradient-end": "#10b981",
+                    "--shadow-color": "rgba(16, 185, 129, 0.2)",
+                    "--blur-amount": "10px",
+                    "--radial-gradient-1": "radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.1) 0px, transparent 50%)",
+                    "--radial-gradient-2": "radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.08) 0px, transparent 50%)",
+                    "--border-radius": "16px",
+                    "--button-radius": "10px",
+                    "--input-radius": "8px",
+                    "--checkbox-size": "20px",
+                    "--font-family": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                    "--title-size": "3.5em",
+                    "--subtitle-size": "1.3em",
+                    "--score-size": "4.5em",
+                    "--body-size": "0.95em",
+                    "--bg-image": "none",
+                    "--bg-image-size": "cover",
+                    "--bg-image-position": "center center",
+                    "--bg-image-blend": "overlay",
+                    "--bg-overlay-color": "rgba(16, 185, 129, 0.1)",
+                    "--logo-image": "none",
+                    "--logo-size": "40px",
+                    "--icon-emoji": "💚"
+                }
             },
             sunset: {
                 name: "Sunset",
@@ -1215,7 +1332,43 @@
                 "--bg-overlay-color": "rgba(0, 0, 0, 0.5)",
                 "--logo-image": "none",
                 "--logo-size": "40px",
-                "--icon-emoji": "🌅"
+                "--icon-emoji": "🌅",
+                light: {
+                    name: "Sunset Light",
+                    "--bg-primary": "#fff7ed",
+                    "--bg-secondary": "rgba(249, 115, 22, 0.1)",
+                    "--bg-card": "rgba(255, 255, 255, 0.95)",
+                    "--bg-hover": "rgba(249, 115, 22, 0.15)",
+                    "--border-color": "rgba(249, 115, 22, 0.2)",
+                    "--text-primary": "#7c2d12",
+                    "--text-secondary": "#c2410c",
+                    "--text-muted": "#f97316",
+                    "--accent-primary": "#ea580c",
+                    "--accent-secondary": "#f97316",
+                    "--gradient-start": "#ea580c",
+                    "--gradient-end": "#f97316",
+                    "--shadow-color": "rgba(249, 115, 22, 0.2)",
+                    "--blur-amount": "10px",
+                    "--radial-gradient-1": "radial-gradient(at 0% 0%, rgba(249, 115, 22, 0.1) 0px, transparent 50%)",
+                    "--radial-gradient-2": "radial-gradient(at 100% 100%, rgba(234, 88, 12, 0.08) 0px, transparent 50%)",
+                    "--border-radius": "16px",
+                    "--button-radius": "10px",
+                    "--input-radius": "8px",
+                    "--checkbox-size": "20px",
+                    "--font-family": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                    "--title-size": "3.5em",
+                    "--subtitle-size": "1.3em",
+                    "--score-size": "4.5em",
+                    "--body-size": "0.95em",
+                    "--bg-image": "none",
+                    "--bg-image-size": "cover",
+                    "--bg-image-position": "center center",
+                    "--bg-image-blend": "overlay",
+                    "--bg-overlay-color": "rgba(249, 115, 22, 0.1)",
+                    "--logo-image": "none",
+                    "--logo-size": "40px",
+                    "--icon-emoji": "🌅"
+                }
             },
             light: {
                 name: "Light Mode",
@@ -1287,7 +1440,43 @@
                 "--bg-overlay-color": "rgba(0, 0, 0, 0.4)",
                 "--logo-image": "none",
                 "--logo-size": "36px",
-                "--icon-emoji": "🤖"
+                "--icon-emoji": "🤖",
+                light: {
+                    name: "Android Material You Light",
+                    "--bg-primary": "#ffebfe",
+                    "--bg-secondary": "rgba(208, 188, 255, 0.15)",
+                    "--bg-card": "rgba(255, 255, 255, 0.95)",
+                    "--bg-hover": "rgba(208, 188, 255, 0.2)",
+                    "--border-color": "rgba(208, 188, 255, 0.3)",
+                    "--text-primary": "#1c1b1f",
+                    "--text-secondary": "#49454f",
+                    "--text-muted": "#79747e",
+                    "--accent-primary": "#6750a4",
+                    "--accent-secondary": "rgba(103, 80, 164, 0.15)",
+                    "--gradient-start": "#6750a4",
+                    "--gradient-end": "#d0bcff",
+                    "--shadow-color": "rgba(103, 80, 164, 0.2)",
+                    "--blur-amount": "10px",
+                    "--radial-gradient-1": "radial-gradient(at 0% 0%, rgba(208, 188, 255, 0.15) 0px, transparent 50%)",
+                    "--radial-gradient-2": "radial-gradient(at 100% 100%, rgba(208, 188, 255, 0.1) 0px, transparent 50%)",
+                    "--border-radius": "24px",
+                    "--button-radius": "20px",
+                    "--input-radius": "12px",
+                    "--checkbox-size": "18px",
+                    "--font-family": "'Roboto', sans-serif",
+                    "--title-size": "3em",
+                    "--subtitle-size": "1.2em",
+                    "--score-size": "4em",
+                    "--body-size": "0.9em",
+                    "--bg-image": "none",
+                    "--bg-image-size": "cover",
+                    "--bg-image-position": "center center",
+                    "--bg-image-blend": "overlay",
+                    "--bg-overlay-color": "rgba(103, 80, 164, 0.08)",
+                    "--logo-image": "none",
+                    "--logo-size": "36px",
+                    "--icon-emoji": "🤖"
+                }
             },
             "apple-ios": {
                 name: "Apple iOS",
@@ -1323,7 +1512,43 @@
                 "--bg-overlay-color": "rgba(0, 0, 0, 0.5)",
                 "--logo-image": "none",
                 "--logo-size": "40px",
-                "--icon-emoji": "🍎"
+                "--icon-emoji": "🍎",
+                light: {
+                    name: "Apple iOS Light",
+                    "--bg-primary": "#ffffff",
+                    "--bg-secondary": "rgba(0, 0, 0, 0.06)",
+                    "--bg-card": "rgba(255, 255, 255, 0.95)",
+                    "--bg-hover": "rgba(0, 0, 0, 0.08)",
+                    "--border-color": "rgba(0, 0, 0, 0.1)",
+                    "--text-primary": "#000000",
+                    "--text-secondary": "rgba(0, 0, 0, 0.6)",
+                    "--text-muted": "rgba(0, 0, 0, 0.4)",
+                    "--accent-primary": "#007aff",
+                    "--accent-secondary": "#5856d6",
+                    "--gradient-start": "#007aff",
+                    "--gradient-end": "#5856d6",
+                    "--shadow-color": "rgba(0, 122, 255, 0.15)",
+                    "--blur-amount": "10px",
+                    "--radial-gradient-1": "radial-gradient(at 0% 0%, rgba(0, 122, 255, 0.08) 0px, transparent 50%)",
+                    "--radial-gradient-2": "radial-gradient(at 100% 100%, rgba(88, 86, 214, 0.08) 0px, transparent 50%)",
+                    "--border-radius": "20px",
+                    "--button-radius": "12px",
+                    "--input-radius": "10px",
+                    "--checkbox-size": "22px",
+                    "--font-family": "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
+                    "--title-size": "3.2em",
+                    "--subtitle-size": "1.25em",
+                    "--score-size": "4.2em",
+                    "--body-size": "0.95em",
+                    "--bg-image": "none",
+                    "--bg-image-size": "cover",
+                    "--bg-image-position": "center center",
+                    "--bg-image-blend": "overlay",
+                    "--bg-overlay-color": "rgba(0, 0, 0, 0.05)",
+                    "--logo-image": "none",
+                    "--logo-size": "40px",
+                    "--icon-emoji": "🍎"
+                }
             },
             "windows-fluent": {
                 name: "Windows Fluent",
@@ -1359,7 +1584,43 @@
                 "--bg-overlay-color": "rgba(0, 0, 0, 0.3)",
                 "--logo-image": "none",
                 "--logo-size": "40px",
-                "--icon-emoji": "🪟"
+                "--icon-emoji": "🪟",
+                light: {
+                    name: "Windows Fluent Light",
+                    "--bg-primary": "#f3f3f3",
+                    "--bg-secondary": "rgba(0, 0, 0, 0.04)",
+                    "--bg-card": "rgba(255, 255, 255, 0.95)",
+                    "--bg-hover": "rgba(0, 120, 212, 0.12)",
+                    "--border-color": "rgba(0, 0, 0, 0.08)",
+                    "--text-primary": "#1a1a1a",
+                    "--text-secondary": "rgba(0, 0, 0, 0.6)",
+                    "--text-muted": "rgba(0, 0, 0, 0.4)",
+                    "--accent-primary": "#0078d4",
+                    "--accent-secondary": "#60cdff",
+                    "--gradient-start": "#0078d4",
+                    "--gradient-end": "#60cdff",
+                    "--shadow-color": "rgba(0, 120, 212, 0.15)",
+                    "--blur-amount": "10px",
+                    "--radial-gradient-1": "radial-gradient(at 0% 0%, rgba(0, 120, 212, 0.08) 0px, transparent 50%)",
+                    "--radial-gradient-2": "radial-gradient(at 100% 100%, rgba(96, 205, 255, 0.06) 0px, transparent 50%)",
+                    "--border-radius": "8px",
+                    "--button-radius": "4px",
+                    "--input-radius": "4px",
+                    "--checkbox-size": "20px",
+                    "--font-family": "'Segoe UI', sans-serif",
+                    "--title-size": "3em",
+                    "--subtitle-size": "1.2em",
+                    "--score-size": "4em",
+                    "--body-size": "0.9em",
+                    "--bg-image": "none",
+                    "--bg-image-size": "cover",
+                    "--bg-image-position": "center center",
+                    "--bg-image-blend": "overlay",
+                    "--bg-overlay-color": "rgba(0, 0, 0, 0.03)",
+                    "--logo-image": "none",
+                    "--logo-size": "40px",
+                    "--icon-emoji": "🪟"
+                }
             },
             "nordic-minimal": {
                 name: "Nordic Minimal",
@@ -1395,7 +1656,43 @@
                 "--bg-overlay-color": "rgba(0, 0, 0, 0.05)",
                 "--logo-image": "none",
                 "--logo-size": "36px",
-                "--icon-emoji": "❄️"
+                "--icon-emoji": "❄️",
+                light: {
+                    name: "Nordic Minimal Light",
+                    "--bg-primary": "#ffffff",
+                    "--bg-secondary": "rgba(0, 0, 0, 0.02)",
+                    "--bg-card": "rgba(255, 255, 255, 0.95)",
+                    "--bg-hover": "rgba(74, 144, 226, 0.08)",
+                    "--border-color": "rgba(0, 0, 0, 0.06)",
+                    "--text-primary": "#1a1a1a",
+                    "--text-secondary": "#4a4a4a",
+                    "--text-muted": "#888888",
+                    "--accent-primary": "#3a7bd5",
+                    "--accent-secondary": "#40c878",
+                    "--gradient-start": "#3a7bd5",
+                    "--gradient-end": "#40c878",
+                    "--shadow-color": "rgba(0, 0, 0, 0.06)",
+                    "--blur-amount": "5px",
+                    "--radial-gradient-1": "radial-gradient(at 0% 0%, rgba(74, 144, 226, 0.04) 0px, transparent 50%)",
+                    "--radial-gradient-2": "radial-gradient(at 100% 100%, rgba(80, 200, 120, 0.04) 0px, transparent 50%)",
+                    "--border-radius": "12px",
+                    "--button-radius": "8px",
+                    "--input-radius": "6px",
+                    "--checkbox-size": "18px",
+                    "--font-family": "'Inter', -apple-system, sans-serif",
+                    "--title-size": "2.8em",
+                    "--subtitle-size": "1.1em",
+                    "--score-size": "3.8em",
+                    "--body-size": "0.85em",
+                    "--bg-image": "none",
+                    "--bg-image-size": "cover",
+                    "--bg-image-position": "center center",
+                    "--bg-image-blend": "overlay",
+                    "--bg-overlay-color": "rgba(0, 0, 0, 0.02)",
+                    "--logo-image": "none",
+                    "--logo-size": "36px",
+                    "--icon-emoji": "❄️"
+                }
             },
             "cyberpunk": {
                 name: "Cyberpunk",
@@ -1431,7 +1728,43 @@
                 "--bg-overlay-color": "rgba(13, 2, 33, 0.7)",
                 "--logo-image": "none",
                 "--logo-size": "40px",
-                "--icon-emoji": "🌃"
+                "--icon-emoji": "🌃",
+                light: {
+                    name: "Cyberpunk Light",
+                    "--bg-primary": "#f8f0ff",
+                    "--bg-secondary": "rgba(128, 0, 255, 0.1)",
+                    "--bg-card": "rgba(255, 255, 255, 0.95)",
+                    "--bg-hover": "rgba(0, 255, 255, 0.15)",
+                    "--border-color": "rgba(128, 0, 255, 0.3)",
+                    "--text-primary": "#2d1b4e",
+                    "--text-secondary": "#7b2cbf",
+                    "--text-muted": "#9d4edd",
+                    "--accent-primary": "#7b2cbf",
+                    "--accent-secondary": "#00cec9",
+                    "--gradient-start": "#7b2cbf",
+                    "--gradient-end": "#00cec9",
+                    "--shadow-color": "rgba(128, 0, 255, 0.2)",
+                    "--blur-amount": "15px",
+                    "--radial-gradient-1": "radial-gradient(at 0% 0%, rgba(128, 0, 255, 0.1) 0px, transparent 50%)",
+                    "--radial-gradient-2": "radial-gradient(at 100% 100%, rgba(0, 206, 201, 0.1) 0px, transparent 50%)",
+                    "--border-radius": "4px",
+                    "--button-radius": "2px",
+                    "--input-radius": "2px",
+                    "--checkbox-size": "16px",
+                    "--font-family": "'Orbitron', 'Rajdhani', sans-serif",
+                    "--title-size": "3em",
+                    "--subtitle-size": "1.2em",
+                    "--score-size": "4.5em",
+                    "--body-size": "0.9em",
+                    "--bg-image": "none",
+                    "--bg-image-size": "cover",
+                    "--bg-image-position": "center center",
+                    "--bg-image-blend": "overlay",
+                    "--bg-overlay-color": "rgba(128, 0, 255, 0.08)",
+                    "--logo-image": "none",
+                    "--logo-size": "40px",
+                    "--icon-emoji": "🌃"
+                }
             },
             "nature-earthy": {
                 name: "Nature Earthy",
@@ -1467,7 +1800,43 @@
                 "--bg-overlay-color": "rgba(0, 0, 0, 0.5)",
                 "--logo-image": "none",
                 "--logo-size": "40px",
-                "--icon-emoji": "🍂"
+                "--icon-emoji": "🍂",
+                light: {
+                    name: "Nature Earthy Light",
+                    "--bg-primary": "#fef7ed",
+                    "--bg-secondary": "rgba(180, 130, 90, 0.1)",
+                    "--bg-card": "rgba(255, 255, 255, 0.95)",
+                    "--bg-hover": "rgba(180, 130, 90, 0.15)",
+                    "--border-color": "rgba(180, 130, 90, 0.2)",
+                    "--text-primary": "#451a03",
+                    "--text-secondary": "#78350f",
+                    "--text-muted": "#a16207",
+                    "--accent-primary": "#d97706",
+                    "--accent-secondary": "#b45309",
+                    "--gradient-start": "#d97706",
+                    "--gradient-end": "#b45309",
+                    "--shadow-color": "rgba(180, 130, 90, 0.2)",
+                    "--blur-amount": "10px",
+                    "--radial-gradient-1": "radial-gradient(at 0% 0%, rgba(180, 130, 90, 0.08) 0px, transparent 50%)",
+                    "--radial-gradient-2": "radial-gradient(at 100% 100%, rgba(180, 83, 9, 0.08) 0px, transparent 50%)",
+                    "--border-radius": "12px",
+                    "--button-radius": "8px",
+                    "--input-radius": "6px",
+                    "--checkbox-size": "20px",
+                    "--font-family": "'Merriweather', Georgia, serif",
+                    "--title-size": "3em",
+                    "--subtitle-size": "1.2em",
+                    "--score-size": "4em",
+                    "--body-size": "0.95em",
+                    "--bg-image": "none",
+                    "--bg-image-size": "cover",
+                    "--bg-image-position": "center center",
+                    "--bg-image-blend": "overlay",
+                    "--bg-overlay-color": "rgba(180, 130, 90, 0.08)",
+                    "--logo-image": "none",
+                    "--logo-size": "40px",
+                    "--icon-emoji": "🍂"
+                }
             },
             "retro-vaporwave": {
                 name: "Retro Vaporwave",
@@ -1503,7 +1872,43 @@
                 "--bg-overlay-color": "rgba(138, 43, 226, 0.3)",
                 "--logo-image": "none",
                 "--logo-size": "40px",
-                "--icon-emoji": "📼"
+                "--icon-emoji": "📼",
+                light: {
+                    name: "Retro Vaporwave Light",
+                    "--bg-primary": "#ffe4f7",
+                    "--bg-secondary": "rgba(255, 105, 180, 0.12)",
+                    "--bg-card": "rgba(255, 255, 255, 0.95)",
+                    "--bg-hover": "rgba(0, 210, 211, 0.15)",
+                    "--border-color": "rgba(255, 105, 180, 0.25)",
+                    "--text-primary": "#3d2066",
+                    "--text-secondary": "#c026d3",
+                    "--text-muted": "#0891b2",
+                    "--accent-primary": "#ec4899",
+                    "--accent-secondary": "#06b6d4",
+                    "--gradient-start": "#ec4899",
+                    "--gradient-end": "#06b6d4",
+                    "--shadow-color": "rgba(236, 72, 153, 0.2)",
+                    "--blur-amount": "15px",
+                    "--radial-gradient-1": "radial-gradient(at 0% 0%, rgba(255, 105, 180, 0.1) 0px, transparent 50%)",
+                    "--radial-gradient-2": "radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.1) 0px, transparent 50%)",
+                    "--border-radius": "8px",
+                    "--button-radius": "4px",
+                    "--input-radius": "4px",
+                    "--checkbox-size": "18px",
+                    "--font-family": "'VT323', monospace",
+                    "--title-size": "3em",
+                    "--subtitle-size": "1.3em",
+                    "--score-size": "4.5em",
+                    "--body-size": "0.95em",
+                    "--bg-image": "none",
+                    "--bg-image-size": "cover",
+                    "--bg-image-position": "center center",
+                    "--bg-image-blend": "overlay",
+                    "--bg-overlay-color": "rgba(255, 105, 180, 0.08)",
+                    "--logo-image": "none",
+                    "--logo-size": "40px",
+                    "--icon-emoji": "📼"
+                }
             },
             "modern-slate": {
                 name: "Modern Slate",
@@ -1539,50 +1944,90 @@
                 "--bg-overlay-color": "rgba(0, 0, 0, 0.4)",
                 "--logo-image": "none",
                 "--logo-size": "40px",
-                "--icon-emoji": "🪨"
+                "--icon-emoji": "🪨",
+                light: {
+                    name: "Modern Slate Light",
+                    "--bg-primary": "#f8fafc",
+                    "--bg-secondary": "rgba(100, 116, 139, 0.1)",
+                    "--bg-card": "rgba(255, 255, 255, 0.95)",
+                    "--bg-hover": "rgba(56, 189, 248, 0.12)",
+                    "--border-color": "rgba(100, 116, 139, 0.15)",
+                    "--text-primary": "#0f172a",
+                    "--text-secondary": "#334155",
+                    "--text-muted": "#64748b",
+                    "--accent-primary": "#0ea5e9",
+                    "--accent-secondary": "#6366f1",
+                    "--gradient-start": "#0ea5e9",
+                    "--gradient-end": "#6366f1",
+                    "--shadow-color": "rgba(56, 189, 248, 0.1)",
+                    "--blur-amount": "8px",
+                    "--radial-gradient-1": "radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.06) 0px, transparent 50%)",
+                    "--radial-gradient-2": "radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.06) 0px, transparent 50%)",
+                    "--border-radius": "16px",
+                    "--button-radius": "10px",
+                    "--input-radius": "8px",
+                    "--checkbox-size": "20px",
+                    "--font-family": "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+                    "--title-size": "3em",
+                    "--subtitle-size": "1.2em",
+                    "--score-size": "4em",
+                    "--body-size": "0.9em",
+                    "--bg-image": "none",
+                    "--bg-image-size": "cover",
+                    "--bg-image-position": "center center",
+                    "--bg-image-blend": "overlay",
+                    "--bg-overlay-color": "rgba(56, 189, 248, 0.05)",
+                    "--logo-image": "none",
+                    "--logo-size": "40px",
+                    "--icon-emoji": "🪨"
+                }
             }
         };
 
         function loadPreset(presetName) {
             const preset = presets[presetName];
             if (!preset) return;
-            document.getElementById('themeName').value = preset.name;
+            
+            // Use light variant if in light mode and preset has one
+            const isLightMode = currentMode === 'light';
+            const presetToUse = isLightMode && preset.light ? preset.light : preset;
+            
+            document.getElementById('themeName').value = presetToUse.name;
             
             // Load preset values into UI
-            Object.keys(preset).forEach(key => {
+            Object.keys(presetToUse).forEach(key => {
                 if (key !== 'name' && key !== 'dark' && key !== 'light') {
                     const varName = key.replace('--', '');
-                    updateCSSVar(varName, preset[key]);
+                    updateCSSVar(varName, presetToUse[key]);
                     
                     const textInput = document.getElementById('text-' + varName);
-                    if (textInput) textInput.value = preset[key];
+                    if (textInput) textInput.value = presetToUse[key];
                     
-                    if (!preset[key].includes('rgba')) {
+                    if (!presetToUse[key].includes('rgba')) {
                         const colorInput = document.getElementById('color-' + varName);
-                        if (colorInput) colorInput.value = preset[key];
+                        if (colorInput) colorInput.value = presetToUse[key];
                     }
                 }
             });
             
             // Save current preset values to the appropriate mode in themeData
-            const targetMode = presetName === 'light' ? 'light' : 'dark';
+            const targetMode = currentMode;
             
             // Save the values that are now in the UI to themeData
             const vars = presetVars();
             vars.forEach(v => {
                 const textInput = document.getElementById('text-' + v);
                 if (textInput) {
-                    themeData[targetMode]['--' + v] = textInput.value;
+                    themeData[currentMode]['--' + v] = textInput.value;
                 }
             });
             
             // If preset has nested dark/light objects, save those too
-            if (preset.dark) {
+            if (!isLightMode && preset.dark) {
                 themeData.dark = {...preset.dark};
             }
-            if (preset.light) {
+            if (isLightMode && preset.light) {
                 themeData.light = {...preset.light};
-                setMode('dark');
             }
         }
 
@@ -1632,6 +2077,7 @@
             const select = document.getElementById('presetSelect');
             const presetName = select.value;
             if (presetName) {
+                selectedPreset = presetName;
                 loadPreset(presetName);
             }
         }
@@ -1797,7 +2243,10 @@
             }
         }
 
-        loadPreset('dark');
+        document.addEventListener('DOMContentLoaded', function() {
+            selectedPreset = 'dark';
+            loadPreset('dark');
+        });
     </script>
 </body>
 </html>
