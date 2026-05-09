@@ -800,8 +800,12 @@
         }
 
         .modal-close {
-            background: var(--bg-secondary);
-            border: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
             color: var(--text-primary);
             font-size: 1.5em;
             width: 40px;
@@ -809,10 +813,11 @@
             border-radius: 10px;
             cursor: pointer;
             transition: all 0.3s;
+            box-shadow: 0 4px 16px var(--shadow-color);
         }
 
         .modal-close:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: var(--bg-hover);
         }
 
         /* Settings Tabs */
@@ -1451,8 +1456,8 @@
                 </div>
 
                 <div style="margin-top: 20px;">
-                    <button class="btn-secondary" onclick="downloadThemeTutorial()">
-                        📖 Download Theme Creation Guide
+                    <button class="btn-secondary" onclick="window.location.href='theme-creator.html'">
+                        🎨 Open Theme Creator
                     </button>
                 </div>
             </div>
@@ -3091,6 +3096,13 @@
             
             if (menu.classList.contains('show') && !menu.contains(e.target) && e.target !== button) {
                 menu.classList.remove('show');
+            }
+            
+            // Close settings modal when clicking outside
+            const settingsModal = document.getElementById('settingsModal');
+            const settingsContent = settingsModal.querySelector('.settings-content');
+            if (settingsModal.classList.contains('show') && !settingsContent.contains(e.target)) {
+                closeSettings();
             }
         });
 
