@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discipline Tracker</title>
+    <title>Discipline Tracker - Enhanced</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Firebase SDK v8 (Compat) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -41,7 +41,9 @@
         body.light-mode .score-card,
         body.light-mode .chart-card,
         body.light-mode .insight-card,
-        body.light-mode .habits-table {
+        body.light-mode .habits-table,
+        body.light-mode .streak-card,
+        body.light-mode .monthly-view-card {
             background: rgba(255, 255, 255, 0.95);
             border: 1px solid rgba(0, 0, 0, 0.12);
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
@@ -49,7 +51,8 @@
 
         body.light-mode .week-info p,
         body.light-mode .score-card h3,
-        body.light-mode .chart-card h3 {
+        body.light-mode .chart-card h3,
+        body.light-mode .streak-card h3 {
             color: #4b5563;
         }
 
@@ -60,7 +63,8 @@
 
         body.light-mode tbody td:first-child,
         body.light-mode .insight-card h3,
-        body.light-mode .habits-table h3 {
+        body.light-mode .habits-table h3,
+        body.light-mode .monthly-view-card h3 {
             color: #1f2937;
         }
 
@@ -100,9 +104,23 @@
             color: #4b5563;
         }
 
-        /* Light mode chart colors - higher contrast */
         body.light-mode canvas {
             filter: brightness(0.95) contrast(1.1);
+        }
+
+        body.light-mode .modal-content {
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid rgba(0, 0, 0, 0.12);
+        }
+
+        body.light-mode .custom-habit-item {
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-mode .week-mini-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.1);
         }
 
         .container {
@@ -152,7 +170,7 @@
             font-weight: 500;
         }
 
-        .form-group input {
+        .form-group input, .form-group textarea {
             width: 100%;
             padding: 14px 16px;
             background: rgba(255, 255, 255, 0.05);
@@ -161,9 +179,15 @@
             color: #e5e7eb;
             font-size: 1em;
             transition: all 0.3s;
+            font-family: inherit;
         }
 
-        .form-group input:focus {
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
             outline: none;
             border-color: #a855f7;
             background: rgba(255, 255, 255, 0.08);
@@ -187,6 +211,33 @@
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(168, 85, 247, 0.6);
+        }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            font-size: 1.05em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
         }
 
         .auth-toggle {
@@ -214,28 +265,24 @@
             padding: 12px;
             border-radius: 8px;
             margin-bottom: 20px;
-            font-size: 0.9em;
+            font-size: 0.95em;
             text-align: center;
         }
 
         .success-message {
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            color: #6ee7b7;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #86efac;
             padding: 12px;
             border-radius: 8px;
             margin-bottom: 20px;
-            font-size: 0.9em;
+            font-size: 0.95em;
             text-align: center;
         }
 
-        /* Main App (hidden until logged in) */
-        #app {
+        /* Main App */
+        .app-container {
             display: none;
-        }
-
-        #auth {
-            display: block;
         }
 
         .header {
@@ -246,8 +293,8 @@
 
         .header h1 {
             font-size: 3.5em;
-            margin-bottom: 15px;
             font-weight: 800;
+            margin-bottom: 15px;
             background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -260,270 +307,218 @@
             font-weight: 300;
         }
 
-        .user-menu-wrapper {
+        /* Dropdown Menu */
+        .menu-container {
             position: absolute;
             top: 0;
             right: 0;
         }
 
         .menu-button {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: #e5e7eb;
-            padding: 12px 20px;
-            border-radius: 12px;
+            padding: 12px 18px;
+            border-radius: 10px;
             cursor: pointer;
-            font-size: 1em;
-            font-weight: 600;
+            font-size: 1.3em;
             transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
 
         .menu-button:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-1px);
-        }
-
-        body.light-mode .menu-button {
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid rgba(0, 0, 0, 0.12);
-            color: #1f2937;
-        }
-
-        body.light-mode .menu-button:hover {
-            background: rgba(255, 255, 255, 1);
+            background: rgba(255, 255, 255, 0.15);
         }
 
         .dropdown-menu {
+            display: none;
             position: absolute;
             top: 60px;
             right: 0;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(20, 20, 30, 0.95);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
             padding: 15px;
-            display: none;
-            flex-direction: column;
-            gap: 10px;
-            min-width: 220px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            min-width: 280px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             z-index: 1000;
         }
 
-        .dropdown-menu.active {
-            display: flex;
+        .dropdown-menu.show {
+            display: block;
         }
 
-        body.light-mode .dropdown-menu {
-            background: rgba(255, 255, 255, 0.98);
-            border: 1px solid rgba(0, 0, 0, 0.12);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        .menu-user {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 10px;
+            color: #9ca3af;
+            font-size: 0.9em;
+        }
+
+        .menu-user strong {
+            color: #e5e7eb;
+            display: block;
+            margin-top: 5px;
+            font-size: 1.05em;
         }
 
         .menu-item {
-            padding: 10px 15px;
-            border-radius: 8px;
+            padding: 12px 15px;
             cursor: pointer;
+            border-radius: 8px;
             transition: all 0.2s;
+            color: #e5e7eb;
+            font-size: 0.95em;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 0.95em;
-            color: #e5e7eb;
-        }
-
-        body.light-mode .menu-item {
-            color: #1f2937;
         }
 
         .menu-item:hover {
             background: rgba(168, 85, 247, 0.2);
         }
 
-        body.light-mode .menu-item:hover {
-            background: rgba(168, 85, 247, 0.1);
+        .menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 10px 0;
         }
 
-        .menu-email {
-            padding: 10px 15px;
-            font-size: 0.85em;
-            color: #9ca3af;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 5px;
-            word-break: break-all;
+        /* Verification Banner */
+        .verification-banner {
+            background: rgba(234, 179, 8, 0.1);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+            color: #fde047;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 0.95em;
         }
 
-        body.light-mode .menu-email {
-            color: #6b7280;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-        }
-
-        .menu-item-icon {
-            font-size: 1.2em;
-            margin-right: 8px;
-        }
-
-        .menu-logout {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            color: #fca5a5;
-            margin-top: 5px;
-        }
-
-        body.light-mode .menu-logout {
-            background: rgba(239, 68, 68, 0.08);
-            border: 1px solid rgba(239, 68, 68, 0.15);
-            color: #dc2626;
-        }
-
-        .menu-logout:hover {
-            background: rgba(239, 68, 68, 0.2);
-        }
-
-        body.light-mode .menu-logout:hover {
-            background: rgba(239, 68, 68, 0.15);
-        }
-
-        .user-email {
-            color: #9ca3af;
-            font-size: 0.9em;
-        }
-
-        .btn-logout {
-            background: rgba(239, 68, 68, 0.2);
-            color: #fca5a5;
-            border: 1px solid rgba(239, 68, 68, 0.3);
+        .verification-banner button {
+            background: rgba(234, 179, 8, 0.2);
+            border: 1px solid rgba(234, 179, 8, 0.4);
+            color: #fde047;
             padding: 8px 16px;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
+            margin-left: 15px;
             font-size: 0.9em;
             font-weight: 600;
             transition: all 0.3s;
         }
 
-        .btn-logout:hover {
-            background: rgba(239, 68, 68, 0.3);
+        .verification-banner button:hover {
+            background: rgba(234, 179, 8, 0.3);
         }
 
-        .week-nav {
+        /* Streak Card */
+        .streak-card {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 25px 30px;
+            padding: 30px;
             border-radius: 20px;
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-
-        .week-nav button {
-            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
-            color: white;
-            border: none;
-            padding: 12px 28px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: 600;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
-        }
-
-        .week-nav button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(168, 85, 247, 0.6);
-        }
-
-        .week-nav button:disabled {
-            background: rgba(255, 255, 255, 0.1);
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .week-info {
+            margin-bottom: 30px;
             text-align: center;
-            flex: 1;
-            margin: 0 20px;
         }
 
-        .week-info h2 {
-            font-size: 1.6em;
+        .streak-card h3 {
+            color: #9ca3af;
+            font-size: 0.95em;
+            font-weight: 500;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .streak-display {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .streak-item {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .streak-number {
+            font-size: 3em;
+            font-weight: 800;
             background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             margin-bottom: 5px;
-            font-weight: 700;
         }
 
-        .week-info p {
+        .streak-label {
             color: #9ca3af;
-            font-size: 1em;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
+        .streak-emoji {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        /* Dashboard Grid */
         .dashboard {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
         }
 
-        .score-card {
+        .score-card, .chart-card {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 40px;
             border-radius: 20px;
-            text-align: center;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            position: relative;
-            overflow: hidden;
+            transition: all 0.3s;
         }
 
-        .score-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #a855f7 0%, #ec4899 100%);
+        .score-card:hover, .chart-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
         }
 
-        .score-card h3 {
+        .score-card h3, .chart-card h3 {
             color: #9ca3af;
             font-size: 0.95em;
+            font-weight: 500;
             margin-bottom: 20px;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: 600;
+            letter-spacing: 1px;
         }
 
-        .score-display {
+        .score {
             font-size: 4.5em;
             font-weight: 800;
-            margin: 15px 0;
             background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            margin-bottom: 15px;
         }
 
         .score-comparison {
-            font-size: 1.1em;
             color: #9ca3af;
-            margin-top: 15px;
+            font-size: 0.95em;
         }
 
         .trend-up {
-            color: #10b981;
+            color: #22c55e;
             font-weight: 600;
         }
 
@@ -532,50 +527,163 @@
             font-weight: 600;
         }
 
-        .chart-card {
+        .chart-container {
+            height: 250px;
+            position: relative;
+        }
+
+        /* Week Navigation */
+        .week-nav {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 25px 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .week-info h2 {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .week-info p {
+            color: #9ca3af;
+            font-size: 0.95em;
+        }
+
+        .week-controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .week-btn {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e5e7eb;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .week-btn:hover:not(:disabled) {
+            background: rgba(168, 85, 247, 0.2);
+            border-color: #a855f7;
+            transform: translateY(-2px);
+        }
+
+        .week-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .week-btn.view-mode {
+            background: rgba(168, 85, 247, 0.2);
+            border-color: #a855f7;
+        }
+
+        /* Habits Table */
+        .habits-table {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 40px;
             border-radius: 20px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            position: relative;
-            overflow: hidden;
+            margin-bottom: 40px;
+            overflow-x: auto;
         }
 
-        .chart-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #a855f7 0%, #ec4899 100%);
-        }
-
-        .chart-card h3 {
-            color: #9ca3af;
-            font-size: 0.95em;
+        .habits-table h3 {
+            font-size: 1.5em;
             margin-bottom: 25px;
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: 600;
+            font-weight: 700;
         }
 
-        .chart-container {
-            position: relative;
-            height: 260px;
+        .table-controls {
             display: flex;
-            justify-content: center;
-            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
+        .table-controls button {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .table-controls button:hover {
+            background: rgba(168, 85, 247, 0.2);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            padding: 15px 10px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid rgba(168, 85, 247, 0.3);
+            color: #a855f7;
+        }
+
+        tbody td {
+            padding: 15px 10px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        tbody td:first-child {
+            text-align: left;
+            font-weight: 500;
+            color: #e5e7eb;
+            padding-left: 15px;
+        }
+
+        tbody tr {
+            transition: background 0.2s;
+        }
+
+        tbody tr:hover {
+            background: rgba(168, 85, 247, 0.1);
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #a855f7;
+        }
+
+        /* Insights */
         .insights {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
         }
 
         .insight-card {
@@ -585,400 +693,508 @@
             padding: 30px;
             border-radius: 20px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .insight-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #a855f7 0%, #ec4899 100%);
         }
 
         .insight-card h3 {
             font-size: 1.2em;
             margin-bottom: 20px;
-            color: #e5e7eb;
-            display: flex;
-            align-items: center;
-            gap: 12px;
             font-weight: 700;
-        }
-
-        .insight-card .emoji {
-            font-size: 1.5em;
+            color: #e5e7eb;
         }
 
         .habit-item {
             padding: 12px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             color: #9ca3af;
             font-size: 0.95em;
-            line-height: 1.5;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .habit-item:last-child {
             border-bottom: none;
         }
 
-        .tips-card {
-            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(168, 85, 247, 0.3);
-            padding: 35px;
-            border-radius: 20px;
-            color: white;
-            box-shadow: 0 8px 32px rgba(168, 85, 247, 0.2);
-            grid-column: 1 / -1;
-            position: relative;
-            overflow: hidden;
+        .habit-item strong {
+            color: #a855f7;
+            margin-right: 8px;
         }
 
-        .tips-card::before {
-            content: '';
-            position: absolute;
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #a855f7 0%, #ec4899 100%);
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
 
-        .tips-card h3 {
-            font-size: 1.3em;
-            margin-bottom: 15px;
+        .modal.show {
             display: flex;
+        }
+
+        .modal-content {
+            background: rgba(20, 20, 30, 0.98);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .modal-header h2 {
+            font-size: 1.8em;
             font-weight: 700;
         }
 
-        .tips-card p {
-            font-size: 1.15em;
-            line-height: 1.7;
-            color: rgba(255, 255, 255, 0.95);
+        .modal-close {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #e5e7eb;
+            font-size: 1.5em;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
         }
 
-        .habits-table {
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .custom-habit-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .custom-habit-item input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #e5e7eb;
+            font-size: 1em;
+            padding: 5px;
+        }
+
+        .custom-habit-item input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+        }
+
+        .habit-delete-btn {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .habit-delete-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        .add-habit-btn {
+            width: 100%;
+            padding: 12px;
+            background: rgba(168, 85, 247, 0.2);
+            border: 1px dashed rgba(168, 85, 247, 0.4);
+            color: #a855f7;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .add-habit-btn:hover {
+            background: rgba(168, 85, 247, 0.3);
+        }
+
+        /* Monthly View */
+        .monthly-view-card {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 35px;
+            padding: 40px;
             border-radius: 20px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            overflow-x: auto;
-            position: relative;
+            margin-bottom: 40px;
         }
 
-        .habits-table::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #a855f7 0%, #ec4899 100%);
-        }
-
-        .habits-table h3 {
-            color: #e5e7eb;
-            font-size: 1.4em;
+        .monthly-view-card h3 {
+            font-size: 1.5em;
             margin-bottom: 25px;
-            text-align: center;
             font-weight: 700;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        thead th {
-            padding: 18px 12px;
-            text-align: center;
-            font-weight: 700;
-            color: #a855f7;
-            border-bottom: 2px solid rgba(168, 85, 247, 0.3);
-            font-size: 0.9em;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-        }
-
-        thead th:first-child {
-            text-align: left;
-            padding-left: 20px;
-        }
-
-        tbody tr {
-            transition: background 0.2s;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        tbody tr:hover {
-            background: rgba(168, 85, 247, 0.05);
-        }
-
-        tbody td {
-            padding: 15px 12px;
-            text-align: center;
-        }
-
-        tbody td:first-child {
-            text-align: left;
-            font-weight: 500;
             color: #e5e7eb;
-            padding-left: 20px;
+        }
+
+        .month-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .week-mini-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .week-mini-card:hover {
+            background: rgba(168, 85, 247, 0.1);
+            transform: translateY(-3px);
+        }
+
+        .week-mini-card.active {
+            background: rgba(168, 85, 247, 0.2);
+            border-color: #a855f7;
+        }
+
+        .week-mini-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .week-mini-title {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .week-mini-score {
+            font-size: 1.8em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .week-mini-dates {
+            color: #9ca3af;
+            font-size: 0.85em;
+            margin-bottom: 10px;
+        }
+
+        .week-mini-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .week-mini-progress {
+            height: 100%;
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+
+        /* Notification Permission Banner */
+        .notification-banner {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
             font-size: 0.95em;
         }
 
-        input[type="checkbox"] {
-            width: 22px;
-            height: 22px;
+        .notification-banner button {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            color: #93c5fd;
+            padding: 8px 16px;
+            border-radius: 6px;
             cursor: pointer;
-            accent-color: #a855f7;
-            transition: transform 0.2s;
-        }
-
-        input[type="checkbox"]:hover {
-            transform: scale(1.15);
-        }
-
-        .actions {
-            margin-top: 25px;
-            text-align: center;
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.05);
-            color: #e5e7eb;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 12px 28px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 1em;
+            margin-left: 15px;
+            font-size: 0.9em;
             font-weight: 600;
             transition: all 0.3s;
-            backdrop-filter: blur(10px);
         }
 
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(168, 85, 247, 0.5);
-            transform: translateY(-2px);
+        .notification-banner button:hover {
+            background: rgba(59, 130, 246, 0.3);
         }
 
-        .habit-item strong {
-            color: #a855f7;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 50px;
-            color: #9ca3af;
-            font-size: 1.2em;
-        }
-
-        @media (max-width: 968px) {
-            .dashboard {
-                grid-template-columns: 1fr;
-            }
-
-            .insights {
-                grid-template-columns: 1fr;
-            }
-
+        /* Responsive */
+        @media (max-width: 768px) {
             .header h1 {
                 font-size: 2.5em;
             }
 
-            .score-display {
-                font-size: 3.5em;
+            .header p {
+                font-size: 1.1em;
             }
 
-            .user-menu-wrapper {
+            .menu-container {
                 position: static;
-                text-align: center;
-                margin-top: 20px;
+                margin-bottom: 20px;
             }
 
-            .dropdown-menu {
-                left: 50%;
-                transform: translateX(-50%);
-                right: auto;
-            }
-
-            table {
-                font-size: 0.85em;
-            }
-
-            tbody td:first-child {
-                font-size: 0.85em;
-            }
-        }
-
-        @media (max-width: 640px) {
-            body {
-                padding: 20px 15px;
+            .score {
+                font-size: 3em;
             }
 
             .week-nav {
                 flex-direction: column;
-                gap: 15px;
-                padding: 20px;
+                text-align: center;
             }
 
-            .week-info {
-                margin: 0;
-            }
-
-            .week-nav button {
+            .week-controls {
                 width: 100%;
+                justify-content: center;
             }
 
-            .header h1 {
-                font-size: 2em;
-            }
-
-            .score-card, .chart-card, .insight-card, .tips-card, .habits-table {
+            .habits-table {
                 padding: 25px 20px;
             }
 
-            .auth-container {
-                padding: 40px 30px;
-                margin: 50px 20px;
+            tbody td:first-child {
+                font-size: 0.85em;
+                padding-left: 10px;
+            }
+
+            .modal-content {
+                padding: 30px 25px;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Auth Section -->
-    <div id="auth">
-        <div class="auth-container">
-            <h2>💪 Discipline Tracker</h2>
-            <p>Build your identity, one habit at a time</p>
+    <!-- Auth Container -->
+    <div id="authContainer" class="auth-container">
+        <!-- Login Form -->
+        <div id="loginForm">
+            <h2>Discipline Tracker</h2>
+            <p>Track your habits, build your future</p>
+            
+            <div id="authError" class="error-message" style="display: none;"></div>
+            <div id="authSuccess" class="success-message" style="display: none;"></div>
+            
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="loginEmail" placeholder="your@email.com">
+            </div>
+            
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="loginPassword" placeholder="••••••••">
+            </div>
+            
+            <button class="btn-primary" onclick="login()">Sign In</button>
+            
+            <div class="auth-toggle">
+                Don't have an account? <a onclick="showSignup()">Sign up</a><br>
+                <a onclick="showPasswordReset()" style="font-size: 0.9em; margin-top: 10px; display: inline-block;">Forgot password?</a>
+            </div>
+        </div>
 
-            <div id="errorMessage" class="error-message" style="display: none;"></div>
-            <div id="successMessage" class="success-message" style="display: none;"></div>
+        <!-- Signup Form -->
+        <div id="signupForm" style="display: none;">
+            <h2>Create Account</h2>
+            <p>Start tracking your discipline journey</p>
+            
+            <div id="signupError" class="error-message" style="display: none;"></div>
+            
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="signupEmail" placeholder="your@email.com">
+            </div>
+            
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="signupPassword" placeholder="Min 6 characters">
+            </div>
+            
+            <div class="form-group">
+                <label>Confirm Password</label>
+                <input type="password" id="signupPasswordConfirm" placeholder="Confirm password">
+            </div>
+            
+            <button class="btn-primary" onclick="signup()">Create Account</button>
+            
+            <div class="auth-toggle">
+                Already have an account? <a onclick="showLogin()">Sign in</a>
+            </div>
+        </div>
 
-            <!-- Login Form -->
-            <form id="loginForm">
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="loginEmail" required placeholder="your@email.com">
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="loginPassword" required placeholder="••••••••">
-                </div>
-                <button type="submit" class="btn-primary">Sign In</button>
-                <div class="auth-toggle">
-                    Don't have an account? <a onclick="showSignup()">Sign up</a>
-                </div>
-            </form>
-
-            <!-- Signup Form -->
-            <form id="signupForm" style="display: none;">
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="signupEmail" required placeholder="your@email.com">
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="signupPassword" required placeholder="••••••••">
-                </div>
-                <div class="form-group">
-                    <label>Confirm Password</label>
-                    <input type="password" id="signupPasswordConfirm" required placeholder="••••••••">
-                </div>
-                <button type="submit" class="btn-primary">Create Account</button>
-                <div class="auth-toggle">
-                    Already have an account? <a onclick="showLogin()">Sign in</a>
-                </div>
-            </form>
+        <!-- Password Reset Form -->
+        <div id="resetForm" style="display: none;">
+            <h2>Reset Password</h2>
+            <p>Enter your email to receive a reset link</p>
+            
+            <div id="resetError" class="error-message" style="display: none;"></div>
+            <div id="resetSuccess" class="success-message" style="display: none;"></div>
+            
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="resetEmail" placeholder="your@email.com">
+            </div>
+            
+            <button class="btn-primary" onclick="resetPassword()">Send Reset Link</button>
+            
+            <div class="auth-toggle">
+                <a onclick="showLogin()">Back to sign in</a>
+            </div>
         </div>
     </div>
 
     <!-- Main App -->
-    <div id="app">
+    <div id="appContainer" class="app-container">
         <div class="container">
+            <!-- Header -->
             <div class="header">
-                <h1>Everything You Need, All in One Place</h1>
-                <p>Track your discipline. Build your identity.</p>
-                <div class="user-menu-wrapper">
-                    <button class="menu-button" onclick="toggleMenu()">
-                        <span>☰</span>
-                        <span>Menu</span>
-                    </button>
-                    <div class="dropdown-menu" id="dropdownMenu">
-                        <div class="menu-email" id="userEmail"></div>
+                <div class="menu-container">
+                    <button class="menu-button" onclick="toggleMenu()">☰</button>
+                    <div id="dropdownMenu" class="dropdown-menu">
+                        <div class="menu-user">
+                            Logged in as
+                            <strong id="userEmail"></strong>
+                        </div>
                         <div class="menu-item" onclick="toggleTheme()">
-                            <span><span class="menu-item-icon" id="themeIcon">☀️</span><span id="themeText">Light Mode</span></span>
+                            <span id="themeText">☀️ Light Mode</span>
                         </div>
                         <div class="menu-item" onclick="toggleLanguage()">
-                            <span><span class="menu-item-icon" id="langFlag">🇬🇧</span><span id="langText">English</span></span>
+                            <span id="languageText">🇷🇴 Romanian</span>
                         </div>
-                        <div class="menu-item menu-logout" onclick="logout()">
-                            <span><span class="menu-item-icon">🚪</span><span id="logoutText">Logout</span></span>
+                        <div class="menu-divider"></div>
+                        <div class="menu-item" onclick="openCustomHabitsModal()">
+                            <span>✏️ Custom Habits</span>
                         </div>
+                        <div class="menu-item" onclick="exportData()">
+                            <span>📥 Export Data</span>
+                        </div>
+                        <div class="menu-item" onclick="showDeleteAccountModal()">
+                            <span style="color: #ef4444;">🗑️ Delete Account</span>
+                        </div>
+                        <div class="menu-divider"></div>
+                        <div class="menu-item" onclick="logout()">
+                            <span>🚪 Logout</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <h1>Discipline Tracker</h1>
+                <p>Your weekly habit companion</p>
+            </div>
+
+            <!-- Email Verification Banner -->
+            <div id="verificationBanner" class="verification-banner" style="display: none;">
+                ⚠️ Please verify your email to access all features.
+                <button onclick="resendVerificationEmail()">Resend Email</button>
+            </div>
+
+            <!-- Notification Permission Banner -->
+            <div id="notificationBanner" class="notification-banner" style="display: none;">
+                🔔 Enable notifications to get daily reminders
+                <button onclick="requestNotificationPermission()">Enable</button>
+                <button onclick="dismissNotificationBanner()" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: #9ca3af; margin-left: 10px;">Maybe Later</button>
+            </div>
+
+            <!-- Streak Card -->
+            <div class="streak-card">
+                <h3>Your Streaks</h3>
+                <div class="streak-display">
+                    <div class="streak-item">
+                        <div class="streak-emoji">🔥</div>
+                        <div class="streak-number" id="currentStreak">0</div>
+                        <div class="streak-label">Current Streak</div>
+                    </div>
+                    <div class="streak-item">
+                        <div class="streak-emoji">🏆</div>
+                        <div class="streak-number" id="longestStreak">0</div>
+                        <div class="streak-label">Longest Streak</div>
+                    </div>
+                    <div class="streak-item">
+                        <div class="streak-emoji">📊</div>
+                        <div class="streak-number" id="totalWeeks">0</div>
+                        <div class="streak-label">Total Weeks</div>
                     </div>
                 </div>
             </div>
 
-            <div class="week-nav">
-                <button onclick="previousWeek()" id="prevBtn">← Previous</button>
-                <div class="week-info">
-                    <h2 id="weekTitle">Week 1, 2025</h2>
-                    <p id="weekDates">January 1 - January 7</p>
-                </div>
-                <button onclick="nextWeek()" id="nextBtn" disabled>Next →</button>
-            </div>
-
+            <!-- Dashboard -->
             <div class="dashboard">
                 <div class="score-card">
-                    <h3>Your Score</h3>
-                    <div class="score-display" id="currentScore">0%</div>
-                    <div class="score-comparison" id="comparison">Track your first week</div>
+                    <h3>This Week's Score</h3>
+                    <div class="score" id="currentScore">0%</div>
+                    <p class="score-comparison" id="comparison">Track your first week</p>
                 </div>
-
+                
                 <div class="chart-card">
-                    <h3>Progress Overview</h3>
+                    <h3>Progress Chart</h3>
                     <div class="chart-container">
                         <canvas id="progressChart"></canvas>
                     </div>
                 </div>
             </div>
 
-            <div class="insights">
-                <div class="insight-card">
-                    <h3><span class="emoji">🏆</span> Where You Excel</h3>
-                    <div id="topHabits">
-                        <div class="habit-item">Complete your first checks to see insights</div>
-                    </div>
+            <!-- Week Navigation -->
+            <div class="week-nav">
+                <div class="week-info">
+                    <h2 id="weekTitle">Week 1, 2026</h2>
+                    <p id="weekDates">May 5 - May 11</p>
                 </div>
-
-                <div class="insight-card">
-                    <h3><span class="emoji">⚠️</span> Needs Attention</h3>
-                    <div id="bottomHabits">
-                        <div class="habit-item">Complete your first checks to see insights</div>
-                    </div>
-                </div>
-
-                <div class="tips-card">
-                    <h3><span class="emoji">💡</span> Your Daily Reminder</h3>
-                    <p id="motivationalTip">Progress isn't linear. Focus on showing up every day. Small wins build momentum.</p>
+                <div class="week-controls">
+                    <button class="week-btn" onclick="previousWeek()">← Previous</button>
+                    <button class="week-btn" id="nextBtn" onclick="nextWeek()">Next →</button>
+                    <button class="week-btn" onclick="clearWeek()">Clear Week</button>
+                    <button class="week-btn view-mode" id="monthlyViewBtn" onclick="toggleMonthlyView()">📅 Monthly View</button>
                 </div>
             </div>
 
+            <!-- Monthly View (Hidden by default) -->
+            <div id="monthlyViewCard" class="monthly-view-card" style="display: none;">
+                <h3 id="monthTitle">May 2026</h3>
+                <div id="monthGrid" class="month-grid">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+
+            <!-- Habits Table -->
             <div class="habits-table">
-                <h3>📋 Weekly Habit Checklist</h3>
-                <table>
+                <h3>Weekly Habits</h3>
+                <div class="table-controls">
+                    <button onclick="checkAll()">✓ Check All</button>
+                    <button onclick="uncheckAll()">✗ Uncheck All</button>
+                </div>
+                <table id="habitsTable">
                     <thead>
                         <tr>
                             <th>Habit</th>
@@ -991,13 +1207,77 @@
                             <th>Sun</th>
                         </tr>
                     </thead>
-                    <tbody id="habitsTableBody">
+                    <tbody id="habitsBody">
+                        <!-- Dynamically populated -->
                     </tbody>
                 </table>
+            </div>
 
-                <div class="actions">
-                    <button class="btn-secondary" onclick="clearWeek()">Clear This Week</button>
+            <!-- Insights -->
+            <div class="insights">
+                <div class="insight-card">
+                    <h3>💪 Where You Excel</h3>
+                    <div id="topHabits"></div>
                 </div>
+                
+                <div class="insight-card">
+                    <h3>🎯 Needs Attention</h3>
+                    <div id="bottomHabits"></div>
+                </div>
+                
+                <div class="insight-card">
+                    <h3>💡 Pro Tip</h3>
+                    <p id="motivationalTip" style="color: #9ca3af; font-size: 0.95em; line-height: 1.6;"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Habits Modal -->
+    <div id="customHabitsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✏️ Custom Habits</h2>
+                <button class="modal-close" onclick="closeCustomHabitsModal()">×</button>
+            </div>
+            
+            <p style="color: #9ca3af; margin-bottom: 25px; font-size: 0.95em;">
+                Customize your habit list. Changes will apply to future weeks.
+            </p>
+            
+            <div id="customHabitsList">
+                <!-- Dynamically populated -->
+            </div>
+            
+            <button class="add-habit-btn" onclick="addCustomHabit()">+ Add New Habit</button>
+            
+            <div style="margin-top: 30px; display: flex; gap: 15px;">
+                <button class="btn-secondary" onclick="closeCustomHabitsModal()">Cancel</button>
+                <button class="btn-primary" onclick="saveCustomHabits()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Account Modal -->
+    <div id="deleteAccountModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>🗑️ Delete Account</h2>
+                <button class="modal-close" onclick="closeDeleteAccountModal()">×</button>
+            </div>
+            
+            <p style="color: #fca5a5; margin-bottom: 20px; font-size: 0.95em; line-height: 1.6;">
+                ⚠️ <strong>Warning:</strong> This action is permanent and cannot be undone. All your data, habits, and progress will be permanently deleted.
+            </p>
+            
+            <div class="form-group">
+                <label>Type "DELETE" to confirm</label>
+                <input type="text" id="deleteConfirmInput" placeholder="DELETE">
+            </div>
+            
+            <div style="margin-top: 30px; display: flex; gap: 15px;">
+                <button class="btn-secondary" onclick="closeDeleteAccountModal()">Cancel</button>
+                <button class="btn-primary btn-danger" onclick="deleteAccount()">Delete Account</button>
             </div>
         </div>
     </div>
@@ -1019,391 +1299,347 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
+        // Global Variables
         let currentUser = null;
         let currentWeekOffset = 0;
+        let currentWeekData = null;
         let chart = null;
-        let currentLanguage = localStorage.getItem('language') || 'en';
-        let currentTheme = localStorage.getItem('theme') || 'dark';
+        let currentLanguage = 'en';
+        let currentTheme = 'dark';
+        let monthlyViewActive = false;
+
+        // Default Habits (can be customized by user)
+        let defaultHabits = [
+            "Wake up early",
+            "Train your body 4-5x a week",
+            "Cut mindless scrolling in half",
+            "Read 10 pages a day",
+            "Drink more water than you think you need",
+            "Fix your sleep (no phone 30 min before bed)",
+            "Eat like someone who respects themselves",
+            "Take solo walks with no music",
+            "Start saying 'no' without explaining",
+            "Journal your thoughts daily",
+            "Do one uncomfortable thing every day",
+            "Spend less time reacting, more time creating",
+            "Clean your room like it matters (it does)",
+            "Upgrade your style, even slightly",
+            "Talk slower, think sharper",
+            "Build a skill that compounds (content, business, fitness)",
+            "Fix your posture",
+            "Limit junk food, not your standards",
+            "Learn to be alone without feeling lonely",
+            "Protect your energy like it's currency",
+            "Surround yourself with people who move with purpose",
+            "Set clear weekly goals",
+            "Do more than what's expected of you",
+            "Cut excuses instantly",
+            "Show up even on bad days",
+            "Spend time in silence",
+            "Focus on discipline over motivation",
+            "Become someone you would respect"
+        ];
+
+        let habits = [...defaultHabits];
 
         // Translations
         const translations = {
             en: {
-                title: "Everything You Need, All in One Place",
-                subtitle: "Track your discipline. Build your identity.",
-                yourScore: "Your Score",
-                trackFirstWeek: "Track your first week",
-                lastWeek: "Last week",
-                thisWeek: "This week",
-                weekScore: "Week score",
-                progressOverview: "Progress Overview",
-                whereExcel: "Where You Excel",
-                needsAttention: "Needs Attention",
-                completeFirst: "Complete your first checks to see insights",
-                dailyReminder: "Your Daily Reminder",
-                weeklyChecklist: "Weekly Habit Checklist",
-                clearWeek: "Clear This Week",
-                clearConfirm: "Are you sure you want to clear all checks for this week? This cannot be undone.",
-                previous: "Previous",
-                next: "Next",
-                week: "Week",
-                logout: "Logout",
+                weekTitle: "Week",
                 completed: "Completed",
                 remaining: "Remaining",
-                days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-                habit: "Habit",
-                lightMode: "Light Mode",
-                darkMode: "Dark Mode",
-                english: "English",
-                romanian: "Romanian",
-                menu: "Menu"
+                clearConfirm: "Are you sure you want to clear this week's data?",
+                habitsList: defaultHabits,
+                days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
             },
             ro: {
-                title: "Tot Ce Ai Nevoie, Într-un Singur Loc",
-                subtitle: "Urmărește-ți disciplina. Construiește-ți identitatea.",
-                yourScore: "Scorul Tău",
-                trackFirstWeek: "Urmărește prima săptămână",
-                lastWeek: "Săptămâna trecută",
-                thisWeek: "Săptămâna aceasta",
-                weekScore: "Scor săptămânal",
-                progressOverview: "Privire de Ansamblu",
-                whereExcel: "Unde Excelezi",
-                needsAttention: "Necesită Atenție",
-                completeFirst: "Completează primele bifări pentru a vedea statistici",
-                dailyReminder: "Reamintirea Ta Zilnică",
-                weeklyChecklist: "Lista Obiceiurilor Săptămânale",
-                clearWeek: "Șterge Săptămâna",
-                clearConfirm: "Ești sigur că vrei să ștergi toate bifările pentru această săptămână? Această acțiune nu poate fi anulată.",
-                previous: "Anterior",
-                next: "Următor",
-                week: "Săptămâna",
-                logout: "Deconectare",
+                weekTitle: "Săptămâna",
                 completed: "Completat",
                 remaining: "Rămas",
-                days: ["Lun", "Mar", "Mie", "Joi", "Vin", "Sâm", "Dum"],
-                habit: "Obicei",
-                lightMode: "Mod Luminos",
-                darkMode: "Mod Întunecat",
-                english: "Engleză",
-                romanian: "Română",
-                menu: "Meniu"
+                clearConfirm: "Sigur vrei să ștergi datele acestei săptămâni?",
+                habitsList: [
+                    "Trezește-te devreme",
+                    "Antrenează-ți corpul de 4-5 ori pe săptămână",
+                    "Reduceți la jumătate scrollingul fără sens",
+                    "Citește 10 pagini pe zi",
+                    "Bea mai multă apă decât crezi că ai nevoie",
+                    "Repară-ți somnul (fără telefon cu 30 min înainte de culcare)",
+                    "Mănâncă ca cineva care se respectă",
+                    "Fă plimbări solo fără muzică",
+                    "Începe să spui 'nu' fără să explici",
+                    "Scrie-ți gândurile zilnic în jurnal",
+                    "Fă câte un lucru incomod în fiecare zi",
+                    "Petrece mai puțin timp reacționând, mai mult creând",
+                    "Curăță-ți camera de parcă ar conta (contează)",
+                    "Îmbunătățește-ți stilul, chiar și ușor",
+                    "Vorbește mai încet, gândește mai ascuțit",
+                    "Construiește o abilitate care se acumulează (conținut, afaceri, fitness)",
+                    "Corectează-ți postura",
+                    "Limitează mâncarea nesănătoasă, nu standardele tale",
+                    "Învață să fii singur fără să te simți singur",
+                    "Protejează-ți energia ca și cum ar fi monedă",
+                    "Înconjoară-te de oameni care se mișcă cu scop",
+                    "Stabilește obiective săptămânale clare",
+                    "Fă mai mult decât se așteaptă de la tine",
+                    "Taie scuzele instant",
+                    "Apari chiar și în zilele proaste",
+                    "Petrece timp în tăcere",
+                    "Concentrează-te pe disciplină în loc de motivație",
+                    "Devino cineva pe care l-ai respecta"
+                ],
+                days: ["Lun", "Mar", "Mie", "Joi", "Vin", "Sâm", "Dum"]
             }
         };
 
-        const habitTranslations = {
-            en: [
-                "Wake up early",
-                "Train your body 4-5x a week",
-                "Cut mindless scrolling in half",
-                "Read 10 pages a day",
-                "Drink more water than you think you need",
-                "Fix your sleep (no phone 30 min before bed)",
-                "Eat like someone who respects themselves",
-                "Take solo walks with no music",
-                "Start saying 'no' without explaining",
-                "Journal your thoughts daily",
-                "Do one uncomfortable thing every day",
-                "Spend less time reacting, more time creating",
-                "Clean your room like it matters (it does)",
-                "Upgrade your style, even slightly",
-                "Talk slower, think sharper",
-                "Build a skill that compounds (content, business, fitness)",
-                "Fix your posture",
-                "Limit junk food, not your standards",
-                "Learn to be alone without feeling lonely",
-                "Protect your energy like it's currency",
-                "Surround yourself with people who move with purpose",
-                "Set clear weekly goals",
-                "Do more than what's expected of you",
-                "Cut excuses instantly",
-                "Show up even on bad days",
-                "Spend time in silence",
-                "Focus on discipline over motivation",
-                "Become someone you would respect"
-            ],
-            ro: [
-                "Trezește-te devreme",
-                "Antrenează-ți corpul de 4-5 ori pe săptămână",
-                "Reduceți la jumătate scrollingul fără sens",
-                "Citește 10 pagini pe zi",
-                "Bea mai multă apă decât crezi că ai nevoie",
-                "Repară-ți somnul (fără telefon cu 30 min înainte de culcare)",
-                "Mănâncă ca cineva care se respectă",
-                "Fă plimbări solo fără muzică",
-                "Începe să spui 'nu' fără să explici",
-                "Scrie-ți gândurile zilnic în jurnal",
-                "Fă câte un lucru incomod în fiecare zi",
-                "Petrece mai puțin timp reacționând, mai mult creând",
-                "Curăță-ți camera de parcă ar conta (contează)",
-                "Îmbunătățește-ți stilul, chiar și ușor",
-                "Vorbește mai încet, gândește mai ascuțit",
-                "Construiește o abilitate care se acumulează (conținut, afaceri, fitness)",
-                "Corectează-ți postura",
-                "Limitează mâncarea nesănătoasă, nu standardele tale",
-                "Învață să fii singur fără să te simți singur",
-                "Protejează-ți energia ca și cum ar fi monedă",
-                "Înconjoară-te de oameni care se mișcă cu scop",
-                "Stabilește obiective săptămânale clare",
-                "Fă mai mult decât se așteaptă de la tine",
-                "Taie scuzele instant",
-                "Apari chiar și în zilele proaste",
-                "Petrece timp în tăcere",
-                "Concentrează-te pe disciplină în loc de motivație",
-                "Devino cineva pe care l-ai respecta"
-            ]
-        };
-
-        // Toggle theme
-        function toggleTheme() {
-            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            localStorage.setItem('theme', currentTheme);
-            applyTheme();
-            document.getElementById('dropdownMenu').classList.remove('active');
-        }
-
-        function applyTheme() {
-            const t = translations[currentLanguage];
-            if (currentTheme === 'light') {
-                document.body.classList.add('light-mode');
-                document.getElementById('themeIcon').textContent = '🌙';
-                document.getElementById('themeText').textContent = t.darkMode;
-            } else {
-                document.body.classList.remove('light-mode');
-                document.getElementById('themeIcon').textContent = '☀️';
-                document.getElementById('themeText').textContent = t.lightMode;
-            }
-        }
-
-        // Toggle language
-        function toggleLanguage() {
-            currentLanguage = currentLanguage === 'en' ? 'ro' : 'en';
-            localStorage.setItem('language', currentLanguage);
-            habits = habitTranslations[currentLanguage]; // Update habits array
-            applyLanguage();
-            renderTable(); // Re-render table with translated habits
-            document.getElementById('dropdownMenu').classList.remove('active');
-        }
-
-        function applyLanguage() {
-            const t = translations[currentLanguage];
-            
-            // Update static text
-            document.querySelector('.header h1').textContent = t.title;
-            document.querySelector('.header p').textContent = t.subtitle;
-            document.querySelector('.score-card h3').textContent = t.yourScore;
-            document.querySelector('.chart-card h3').textContent = t.progressOverview;
-            document.querySelector('.habits-table h3').innerHTML = '📋 ' + t.weeklyChecklist;
-            document.querySelector('.btn-secondary').textContent = t.clearWeek;
-            document.getElementById('prevBtn').innerHTML = '← ' + t.previous;
-            document.getElementById('nextBtn').innerHTML = t.next + ' →';
-            
-            // Update menu button
-            document.querySelector('.menu-button span:last-child').textContent = t.menu;
-            
-            // Update insight cards
-            document.querySelector('.insight-card:nth-child(1) h3').innerHTML = '<span class="emoji">🏆</span> ' + t.whereExcel;
-            document.querySelector('.insight-card:nth-child(2) h3').innerHTML = '<span class="emoji">⚠️</span> ' + t.needsAttention;
-            document.querySelector('.tips-card h3').innerHTML = '<span class="emoji">💡</span> ' + t.dailyReminder;
-            
-            // Update table headers
-            const headers = document.querySelectorAll('thead th');
-            headers[0].textContent = t.habit;
-            t.days.forEach((day, i) => {
-                if (headers[i + 1]) headers[i + 1].textContent = day;
-            });
-            
-            // Update language button
-            if (currentLanguage === 'ro') {
-                document.getElementById('langFlag').textContent = '🇷🇴';
-                document.getElementById('langText').textContent = t.romanian;
-            } else {
-                document.getElementById('langFlag').textContent = '🇬🇧';
-                document.getElementById('langText').textContent = t.english;
-            }
-            
-            // Update logout button
-            document.getElementById('logoutText').textContent = t.logout;
-            
-            // Update theme button text
-            applyTheme();
-            
-            // Update chart labels
-            if (chart) {
-                chart.data.labels = [t.completed, t.remaining];
-                chart.update();
-            }
-        }
-
-        // All 28 habits - now dynamic based on language
-        let habits = habitTranslations[currentLanguage];
-
-        // Toggle menu
-        function toggleMenu() {
-            const menu = document.getElementById('dropdownMenu');
-            menu.classList.toggle('active');
-        }
-
-        // Close menu when clicking outside
-        document.addEventListener('click', function(event) {
-            const menu = document.getElementById('dropdownMenu');
-            const menuButton = document.querySelector('.menu-button');
-            
-            if (menu && menuButton && !menu.contains(event.target) && !menuButton.contains(event.target)) {
-                menu.classList.remove('active');
-            }
-        });
+        // ============= AUTH FUNCTIONS =============
 
         // Auth State Observer
-        auth.onAuthStateChanged(user => {
+        auth.onAuthStateChanged(async (user) => {
             if (user) {
                 currentUser = user;
-                document.getElementById('auth').style.display = 'none';
-                document.getElementById('app').style.display = 'block';
+                document.getElementById('authContainer').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'block';
                 document.getElementById('userEmail').textContent = user.email;
-                init();
+                
+                // Check email verification
+                if (!user.emailVerified) {
+                    document.getElementById('verificationBanner').style.display = 'block';
+                }
+                
+                // Check notification permission
+                checkNotificationPermission();
+                
+                // Load user's custom habits if they exist
+                await loadCustomHabits();
+                
+                await init();
             } else {
                 currentUser = null;
-                document.getElementById('auth').style.display = 'block';
-                document.getElementById('app').style.display = 'none';
+                document.getElementById('authContainer').style.display = 'block';
+                document.getElementById('appContainer').style.display = 'none';
             }
         });
-
-        // Show/Hide Auth Forms
-        function showSignup() {
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('signupForm').style.display = 'block';
-            hideMessages();
-        }
-
-        function showLogin() {
-            document.getElementById('signupForm').style.display = 'none';
-            document.getElementById('loginForm').style.display = 'block';
-            hideMessages();
-        }
-
-        function showError(message) {
-            const errorDiv = document.getElementById('errorMessage');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-            document.getElementById('successMessage').style.display = 'none';
-        }
-
-        function showSuccess(message) {
-            const successDiv = document.getElementById('successMessage');
-            successDiv.textContent = message;
-            successDiv.style.display = 'block';
-            document.getElementById('errorMessage').style.display = 'none';
-        }
-
-        function hideMessages() {
-            document.getElementById('errorMessage').style.display = 'none';
-            document.getElementById('successMessage').style.display = 'none';
-        }
 
         // Login
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        async function login() {
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
-
+            const errorDiv = document.getElementById('authError');
+            
+            if (!email || !password) {
+                errorDiv.textContent = 'Please fill in all fields';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
             try {
                 await auth.signInWithEmailAndPassword(email, password);
+                errorDiv.style.display = 'none';
             } catch (error) {
-                showError(error.message);
+                errorDiv.textContent = error.message;
+                errorDiv.style.display = 'block';
             }
-        });
+        }
 
         // Signup
-        document.getElementById('signupForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        async function signup() {
             const email = document.getElementById('signupEmail').value;
             const password = document.getElementById('signupPassword').value;
             const confirmPassword = document.getElementById('signupPasswordConfirm').value;
-
-            if (password !== confirmPassword) {
-                showError('Passwords do not match!');
+            const errorDiv = document.getElementById('signupError');
+            
+            if (!email || !password || !confirmPassword) {
+                errorDiv.textContent = 'Please fill in all fields';
+                errorDiv.style.display = 'block';
                 return;
             }
-
+            
             if (password.length < 6) {
-                showError('Password must be at least 6 characters long!');
+                errorDiv.textContent = 'Password must be at least 6 characters';
+                errorDiv.style.display = 'block';
                 return;
             }
-
-            try {
-                await auth.createUserWithEmailAndPassword(email, password);
-                showSuccess('Account created successfully!');
-            } catch (error) {
-                showError(error.message);
+            
+            if (password !== confirmPassword) {
+                errorDiv.textContent = 'Passwords do not match';
+                errorDiv.style.display = 'block';
+                return;
             }
-        });
-
-        // Logout
-        function logout() {
-            auth.signOut();
+            
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                
+                // Send verification email
+                await userCredential.user.sendEmailVerification();
+                
+                errorDiv.style.display = 'none';
+                alert('Account created! Please check your email to verify your account.');
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.style.display = 'block';
+            }
         }
 
-        // Get week ID
+        // Password Reset
+        async function resetPassword() {
+            const email = document.getElementById('resetEmail').value;
+            const errorDiv = document.getElementById('resetError');
+            const successDiv = document.getElementById('resetSuccess');
+            
+            if (!email) {
+                errorDiv.textContent = 'Please enter your email';
+                errorDiv.style.display = 'block';
+                successDiv.style.display = 'none';
+                return;
+            }
+            
+            try {
+                await auth.sendPasswordResetEmail(email);
+                errorDiv.style.display = 'none';
+                successDiv.textContent = 'Password reset email sent! Check your inbox.';
+                successDiv.style.display = 'block';
+            } catch (error) {
+                successDiv.style.display = 'none';
+                errorDiv.textContent = error.message;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        // Resend Verification Email
+        async function resendVerificationEmail() {
+            try {
+                await currentUser.sendEmailVerification();
+                alert('Verification email sent! Please check your inbox.');
+            } catch (error) {
+                alert('Error sending verification email: ' + error.message);
+            }
+        }
+
+        // Logout
+        async function logout() {
+            try {
+                await auth.signOut();
+            } catch (error) {
+                alert('Error signing out: ' + error.message);
+            }
+        }
+
+        // Show/Hide Auth Forms
+        function showLogin() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('signupForm').style.display = 'none';
+            document.getElementById('resetForm').style.display = 'none';
+        }
+
+        function showSignup() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('signupForm').style.display = 'block';
+            document.getElementById('resetForm').style.display = 'none';
+        }
+
+        function showPasswordReset() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('signupForm').style.display = 'none';
+            document.getElementById('resetForm').style.display = 'block';
+        }
+
+        // Delete Account
+        async function deleteAccount() {
+            const confirmText = document.getElementById('deleteConfirmInput').value;
+            
+            if (confirmText !== 'DELETE') {
+                alert('Please type DELETE to confirm');
+                return;
+            }
+            
+            if (!confirm('Are you absolutely sure? This cannot be undone!')) {
+                return;
+            }
+            
+            try {
+                // Delete all user data from Firestore
+                const userDoc = db.collection('users').doc(currentUser.uid);
+                const weeksSnapshot = await userDoc.collection('weeks').get();
+                
+                // Delete all weeks
+                const deletePromises = weeksSnapshot.docs.map(doc => doc.ref.delete());
+                await Promise.all(deletePromises);
+                
+                // Delete user document
+                await userDoc.delete();
+                
+                // Delete user account
+                await currentUser.delete();
+                
+                alert('Account deleted successfully');
+            } catch (error) {
+                if (error.code === 'auth/requires-recent-login') {
+                    alert('For security reasons, please log out and log in again before deleting your account.');
+                } else {
+                    alert('Error deleting account: ' + error.message);
+                }
+            }
+        }
+
+        function showDeleteAccountModal() {
+            document.getElementById('deleteAccountModal').classList.add('show');
+            document.getElementById('deleteConfirmInput').value = '';
+            toggleMenu();
+        }
+
+        function closeDeleteAccountModal() {
+            document.getElementById('deleteAccountModal').classList.remove('show');
+        }
+
+        // ============= FIRESTORE FUNCTIONS =============
+
+        // Get Week ID (format: YYYY-Www)
         function getWeekId(offset = 0) {
-            const now = new Date();
-            now.setDate(now.getDate() + (offset * 7));
-            const year = now.getFullYear();
-            const firstDay = new Date(year, 0, 1);
-            const days = Math.floor((now - firstDay) / (24 * 60 * 60 * 1000));
-            const weekNum = Math.ceil((days + firstDay.getDay() + 1) / 7);
+            const monday = getMondayOfWeek(offset);
+            const weekNum = getWeekNumber(monday);
+            const year = monday.getFullYear();
             return `${year}-W${String(weekNum).padStart(2, '0')}`;
         }
 
         // Get Monday of week
         function getMondayOfWeek(offset = 0) {
             const now = new Date();
-            now.setDate(now.getDate() + (offset * 7));
             const day = now.getDay();
-            const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-            return new Date(now.setDate(diff));
-        }
-
-        // Format date range
-        function formatWeekDates(monday) {
-            const sunday = new Date(monday);
-            sunday.setDate(monday.getDate() + 6);
-            const options = { month: 'long', day: 'numeric' };
-            return `${monday.toLocaleDateString('en-US', options)} - ${sunday.toLocaleDateString('en-US', options)}`;
+            const diff = day === 0 ? -6 : 1 - day;
+            const monday = new Date(now);
+            monday.setDate(now.getDate() + diff + (offset * 7));
+            monday.setHours(0, 0, 0, 0);
+            return monday;
         }
 
         // Get week number
         function getWeekNumber(date) {
-            const firstDay = new Date(date.getFullYear(), 0, 1);
-            const days = Math.floor((date - firstDay) / (24 * 60 * 60 * 1000));
-            return Math.ceil((days + firstDay.getDay() + 1) / 7);
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
         }
 
-        // Get week data from Firestore
-        async function getWeekData(weekId) {
-            if (!currentUser) return createEmptyWeekData();
-
-            const docRef = db.collection('users').doc(currentUser.uid).collection('weeks').doc(weekId);
-            const doc = await docRef.get();
-
-            if (doc.exists) {
-                const data = doc.data();
-                // Convert flat object back to nested array
-                return {
-                    habits: convertFlatToNestedArray(data.habits),
-                    score: data.score || 0
-                };
-            } else {
-                return createEmptyWeekData();
-            }
+        // Format week dates
+        function formatWeekDates(monday) {
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            
+            return `${monthNames[monday.getMonth()]} ${monday.getDate()} - ${monthNames[sunday.getMonth()]} ${sunday.getDate()}`;
         }
 
+        // Create empty week data
         function createEmptyWeekData() {
             return {
-                habits: Array(28).fill(null).map(() => Array(7).fill(false)),
+                habits: Array(habits.length).fill(null).map(() => Array(7).fill(false)),
                 score: 0
             };
         }
 
-        // Convert nested array to flat object for Firebase
+        // Convert nested array to flat object (Firebase doesn't support nested arrays)
         function convertNestedArrayToFlat(nestedArray) {
             const flat = {};
             nestedArray.forEach((week, habitIndex) => {
@@ -1415,164 +1651,604 @@
         }
 
         // Convert flat object back to nested array
-        function convertFlatToNestedArray(flatObj) {
-            const nested = Array(28).fill(null).map(() => Array(7).fill(false));
-            
-            if (!flatObj) return nested;
-            
-            Object.keys(flatObj).forEach(key => {
+        function convertFlatToNestedArray(flatObject, habitCount = habits.length) {
+            const nested = Array(habitCount).fill(null).map(() => Array(7).fill(false));
+            Object.keys(flatObject).forEach(key => {
                 const match = key.match(/h(\d+)_d(\d+)/);
                 if (match) {
                     const habitIndex = parseInt(match[1]);
                     const dayIndex = parseInt(match[2]);
-                    nested[habitIndex][dayIndex] = flatObj[key];
+                    if (habitIndex < habitCount && dayIndex < 7) {
+                        nested[habitIndex][dayIndex] = flatObject[key];
+                    }
                 }
             });
-            
             return nested;
+        }
+
+        // Calculate score
+        function calculateScore(habits) {
+            const total = habits.length * 7;
+            const checked = habits.flat().filter(Boolean).length;
+            return Math.round((checked / total) * 100);
+        }
+
+        // Get week data from Firestore
+        async function getWeekData(weekId) {
+            try {
+                const docRef = db.collection('users').doc(currentUser.uid).collection('weeks').doc(weekId);
+                const doc = await docRef.get();
+                
+                if (doc.exists) {
+                    const data = doc.data();
+                    return {
+                        habits: convertFlatToNestedArray(data.habits),
+                        score: data.score
+                    };
+                } else {
+                    return createEmptyWeekData();
+                }
+            } catch (error) {
+                console.error('Error getting week data:', error);
+                return createEmptyWeekData();
+            }
         }
 
         // Save week data to Firestore
         async function saveWeekData(weekId, weekData) {
-            if (!currentUser) {
-                console.error('No user logged in');
-                return;
-            }
-
             try {
                 const docRef = db.collection('users').doc(currentUser.uid).collection('weeks').doc(weekId);
-                // Convert nested array to flat object before saving
-                const flatData = {
+                await docRef.set({
                     habits: convertNestedArrayToFlat(weekData.habits),
-                    score: weekData.score
-                };
-                await docRef.set(flatData);
-                console.log('Data saved successfully to Firebase:', weekId);
+                    score: weekData.score,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
             } catch (error) {
-                console.error('Firebase save error:', error);
-                console.error('Error code:', error.code);
-                console.error('Error message:', error.message);
-                throw error; // Re-throw to be caught by toggleHabit
+                console.error('Error saving week data:', error);
+                alert('Failed to save data. Please check your internet connection.');
             }
         }
 
-        // Calculate score
-        function calculateScore(weekData) {
-            const total = 28 * 7;
-            const completed = weekData.habits.flat().filter(Boolean).length;
-            return Math.round((completed / total) * 100);
+        // ============= CUSTOM HABITS FUNCTIONS =============
+
+        async function loadCustomHabits() {
+            try {
+                const docRef = db.collection('users').doc(currentUser.uid).collection('settings').doc('habits');
+                const doc = await docRef.get();
+                
+                if (doc.exists) {
+                    const data = doc.data();
+                    if (data.customHabits && data.customHabits.length > 0) {
+                        habits = data.customHabits;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading custom habits:', error);
+            }
         }
 
-        // Store current week data in memory to avoid re-fetching
-        let currentWeekData = null;
+        async function saveCustomHabitsToFirebase(customHabits) {
+            try {
+                const docRef = db.collection('users').doc(currentUser.uid).collection('settings').doc('habits');
+                await docRef.set({
+                    customHabits: customHabits,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (error) {
+                console.error('Error saving custom habits:', error);
+                alert('Failed to save custom habits. Please try again.');
+            }
+        }
+
+        function openCustomHabitsModal() {
+            const t = translations[currentLanguage];
+            const habitsList = document.getElementById('customHabitsList');
+            habitsList.innerHTML = '';
+            
+            habits.forEach((habit, index) => {
+                const translatedHabit = currentLanguage === 'ro' && index < t.habitsList.length 
+                    ? t.habitsList[index] 
+                    : habit;
+                
+                const div = document.createElement('div');
+                div.className = 'custom-habit-item';
+                div.innerHTML = `
+                    <input type="text" value="${translatedHabit}" data-index="${index}">
+                    <button class="habit-delete-btn" onclick="deleteCustomHabit(${index})">Delete</button>
+                `;
+                habitsList.appendChild(div);
+            });
+            
+            document.getElementById('customHabitsModal').classList.add('show');
+            toggleMenu();
+        }
+
+        function closeCustomHabitsModal() {
+            document.getElementById('customHabitsModal').classList.remove('show');
+        }
+
+        function addCustomHabit() {
+            const habitsList = document.getElementById('customHabitsList');
+            const index = habitsList.children.length;
+            
+            const div = document.createElement('div');
+            div.className = 'custom-habit-item';
+            div.innerHTML = `
+                <input type="text" placeholder="New habit" data-index="${index}">
+                <button class="habit-delete-btn" onclick="deleteCustomHabit(${index})">Delete</button>
+            `;
+            habitsList.appendChild(div);
+        }
+
+        function deleteCustomHabit(index) {
+            const habitsList = document.getElementById('customHabitsList');
+            const items = habitsList.querySelectorAll('.custom-habit-item');
+            if (items.length <= 1) {
+                alert('You must have at least one habit!');
+                return;
+            }
+            items[index].remove();
+            
+            // Re-index
+            const remainingItems = habitsList.querySelectorAll('.custom-habit-item input');
+            remainingItems.forEach((input, newIndex) => {
+                input.setAttribute('data-index', newIndex);
+            });
+        }
+
+        async function saveCustomHabits() {
+            const inputs = document.querySelectorAll('#customHabitsList input');
+            const newHabits = Array.from(inputs).map(input => input.value.trim()).filter(h => h);
+            
+            if (newHabits.length === 0) {
+                alert('Please add at least one habit!');
+                return;
+            }
+            
+            habits = newHabits;
+            await saveCustomHabitsToFirebase(newHabits);
+            
+            closeCustomHabitsModal();
+            
+            // Reload current week with new habits
+            await renderTable();
+            await updateDashboard();
+        }
+
+        // ============= EXPORT DATA FUNCTION =============
+
+        async function exportData() {
+            try {
+                const userDoc = db.collection('users').doc(currentUser.uid);
+                const weeksSnapshot = await userDoc.collection('weeks').get();
+                
+                const exportData = {
+                    user: currentUser.email,
+                    exportDate: new Date().toISOString(),
+                    habits: habits,
+                    weeks: []
+                };
+                
+                weeksSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    exportData.weeks.push({
+                        weekId: doc.id,
+                        score: data.score,
+                        habits: data.habits,
+                        updatedAt: data.updatedAt ? data.updatedAt.toDate().toISOString() : null
+                    });
+                });
+                
+                // Sort by week ID
+                exportData.weeks.sort((a, b) => a.weekId.localeCompare(b.weekId));
+                
+                // Create JSON file
+                const jsonStr = JSON.stringify(exportData, null, 2);
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `discipline-tracker-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                alert('Data exported successfully!');
+                toggleMenu();
+            } catch (error) {
+                console.error('Error exporting data:', error);
+                alert('Failed to export data. Please try again.');
+            }
+        }
+
+        // ============= STREAK CALCULATION =============
+
+        async function calculateStreaks() {
+            try {
+                const userDoc = db.collection('users').doc(currentUser.uid);
+                const weeksSnapshot = await userDoc.collection('weeks').get();
+                
+                if (weeksSnapshot.empty) {
+                    document.getElementById('currentStreak').textContent = '0';
+                    document.getElementById('longestStreak').textContent = '0';
+                    document.getElementById('totalWeeks').textContent = '0';
+                    return;
+                }
+                
+                // Get all weeks with scores >= 70%
+                const weeks = [];
+                weeksSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.score >= 70) {
+                        weeks.push({
+                            weekId: doc.id,
+                            score: data.score
+                        });
+                    }
+                });
+                
+                // Sort by week ID (chronological)
+                weeks.sort((a, b) => a.weekId.localeCompare(b.weekId));
+                
+                // Calculate current streak
+                let currentStreak = 0;
+                const currentWeekId = getWeekId(0);
+                
+                for (let i = weeks.length - 1; i >= 0; i--) {
+                    const expectedWeekId = getWeekId(-currentStreak);
+                    if (weeks[i].weekId === expectedWeekId) {
+                        currentStreak++;
+                    } else {
+                        break;
+                    }
+                }
+                
+                // Calculate longest streak
+                let longestStreak = 0;
+                let tempStreak = 0;
+                
+                for (let i = 0; i < weeks.length; i++) {
+                    if (i === 0) {
+                        tempStreak = 1;
+                    } else {
+                        // Check if consecutive week
+                        const prevWeek = parseWeekId(weeks[i-1].weekId);
+                        const currWeek = parseWeekId(weeks[i].weekId);
+                        
+                        if (currWeek.year === prevWeek.year && currWeek.week === prevWeek.week + 1) {
+                            tempStreak++;
+                        } else if (currWeek.year === prevWeek.year + 1 && currWeek.week === 1 && prevWeek.week >= 52) {
+                            tempStreak++;
+                        } else {
+                            tempStreak = 1;
+                        }
+                    }
+                    
+                    longestStreak = Math.max(longestStreak, tempStreak);
+                }
+                
+                document.getElementById('currentStreak').textContent = currentStreak;
+                document.getElementById('longestStreak').textContent = longestStreak;
+                document.getElementById('totalWeeks').textContent = weeksSnapshot.size;
+                
+            } catch (error) {
+                console.error('Error calculating streaks:', error);
+            }
+        }
+
+        function parseWeekId(weekId) {
+            const parts = weekId.split('-W');
+            return {
+                year: parseInt(parts[0]),
+                week: parseInt(parts[1])
+            };
+        }
+
+        // ============= MONTHLY VIEW =============
+
+        function toggleMonthlyView() {
+            monthlyViewActive = !monthlyViewActive;
+            const card = document.getElementById('monthlyViewCard');
+            const btn = document.getElementById('monthlyViewBtn');
+            
+            if (monthlyViewActive) {
+                card.style.display = 'block';
+                btn.classList.add('view-mode');
+                renderMonthlyView();
+            } else {
+                card.style.display = 'none';
+                btn.classList.remove('view-mode');
+            }
+        }
+
+        async function renderMonthlyView() {
+            const monday = getMondayOfWeek(currentWeekOffset);
+            const month = monday.getMonth();
+            const year = monday.getFullYear();
+            
+            const monthNames = ["January", "February", "March", "April", "May", "June", 
+                               "July", "August", "September", "October", "November", "December"];
+            
+            document.getElementById('monthTitle').textContent = `${monthNames[month]} ${year}`;
+            
+            // Find all weeks in this month
+            const weeksInMonth = [];
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            
+            // Start from the Monday of the week containing the 1st
+            let current = new Date(firstDay);
+            const day = current.getDay();
+            const diff = day === 0 ? -6 : 1 - day;
+            current.setDate(current.getDate() + diff);
+            
+            while (current <= lastDay) {
+                const weekMonday = new Date(current);
+                const weekId = getWeekId(Math.floor((weekMonday - getMondayOfWeek(0)) / (7 * 24 * 60 * 60 * 1000)));
+                
+                weeksInMonth.push({
+                    monday: new Date(weekMonday),
+                    weekId: getWeekIdFromDate(weekMonday)
+                });
+                
+                current.setDate(current.getDate() + 7);
+            }
+            
+            // Load data for all weeks
+            const grid = document.getElementById('monthGrid');
+            grid.innerHTML = '';
+            
+            for (const week of weeksInMonth) {
+                const weekData = await getWeekData(week.weekId);
+                const weekNum = getWeekNumber(week.monday);
+                const dates = formatWeekDates(week.monday);
+                
+                const card = document.createElement('div');
+                card.className = 'week-mini-card';
+                if (week.weekId === getWeekId(currentWeekOffset)) {
+                    card.classList.add('active');
+                }
+                
+                card.innerHTML = `
+                    <div class="week-mini-header">
+                        <div class="week-mini-title">Week ${weekNum}</div>
+                        <div class="week-mini-score">${weekData.score}%</div>
+                    </div>
+                    <div class="week-mini-dates">${dates}</div>
+                    <div class="week-mini-bar">
+                        <div class="week-mini-progress" style="width: ${weekData.score}%"></div>
+                    </div>
+                `;
+                
+                card.onclick = () => jumpToWeek(week.weekId);
+                grid.appendChild(card);
+            }
+        }
+
+        function getWeekIdFromDate(date) {
+            const weekNum = getWeekNumber(date);
+            const year = date.getFullYear();
+            return `${year}-W${String(weekNum).padStart(2, '0')}`;
+        }
+
+        async function jumpToWeek(weekId) {
+            const targetMonday = getDateFromWeekId(weekId);
+            const currentMonday = getMondayOfWeek(0);
+            const diffDays = (targetMonday - currentMonday) / (24 * 60 * 60 * 1000);
+            currentWeekOffset = Math.floor(diffDays / 7);
+            
+            updateWeekDisplay();
+            await renderTable();
+            await updateDashboard();
+            
+            if (monthlyViewActive) {
+                renderMonthlyView();
+            }
+        }
+
+        function getDateFromWeekId(weekId) {
+            const parts = weekId.split('-W');
+            const year = parseInt(parts[0]);
+            const week = parseInt(parts[1]);
+            
+            const jan4 = new Date(year, 0, 4);
+            const weekStart = new Date(jan4);
+            weekStart.setDate(jan4.getDate() - (jan4.getDay() || 7) + 1 + (week - 1) * 7);
+            
+            return weekStart;
+        }
+
+        // ============= NOTIFICATIONS =============
+
+        function checkNotificationPermission() {
+            if (!('Notification' in window)) {
+                return;
+            }
+            
+            const permission = Notification.permission;
+            const dismissed = localStorage.getItem('notificationBannerDismissed');
+            
+            if (permission === 'default' && !dismissed) {
+                document.getElementById('notificationBanner').style.display = 'block';
+            }
+        }
+
+        async function requestNotificationPermission() {
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    scheduleNotifications();
+                    document.getElementById('notificationBanner').style.display = 'none';
+                    alert('Notifications enabled! You will receive daily reminders.');
+                }
+            } catch (error) {
+                console.error('Error requesting notification permission:', error);
+            }
+        }
+
+        function dismissNotificationBanner() {
+            localStorage.setItem('notificationBannerDismissed', 'true');
+            document.getElementById('notificationBanner').style.display = 'none';
+        }
+
+        function scheduleNotifications() {
+            // Note: Browser notifications need a service worker for actual scheduling
+            // This is a simplified version - for production, implement a service worker
+            
+            if (Notification.permission === 'granted') {
+                // Show a test notification
+                new Notification('Discipline Tracker', {
+                    body: 'Daily reminder: Track your habits for today!',
+                    icon: '📊'
+                });
+            }
+        }
+
+        // ============= UI FUNCTIONS =============
+
+        // Toggle menu
+        function toggleMenu() {
+            const menu = document.getElementById('dropdownMenu');
+            menu.classList.toggle('show');
+        }
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('dropdownMenu');
+            const button = document.querySelector('.menu-button');
+            
+            if (menu.classList.contains('show') && !menu.contains(e.target) && e.target !== button) {
+                menu.classList.remove('show');
+            }
+        });
+
+        // Toggle theme
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('theme', currentTheme);
+            applyTheme();
+            toggleMenu();
+        }
+
+        function applyTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                currentTheme = savedTheme;
+            }
+            
+            if (currentTheme === 'light') {
+                document.body.classList.add('light-mode');
+                document.getElementById('themeText').textContent = '🌙 Dark Mode';
+            } else {
+                document.body.classList.remove('light-mode');
+                document.getElementById('themeText').textContent = '☀️ Light Mode';
+            }
+        }
+
+        // Toggle language
+        function toggleLanguage() {
+            currentLanguage = currentLanguage === 'en' ? 'ro' : 'en';
+            localStorage.setItem('language', currentLanguage);
+            applyLanguage();
+            renderTable();
+            updateDashboard();
+            toggleMenu();
+        }
+
+        function applyLanguage() {
+            const savedLanguage = localStorage.getItem('language');
+            if (savedLanguage) {
+                currentLanguage = savedLanguage;
+            }
+            
+            if (currentLanguage === 'ro') {
+                document.getElementById('languageText').textContent = '🇬🇧 English';
+            } else {
+                document.getElementById('languageText').textContent = '🇷🇴 Romanian';
+            }
+        }
+
+        // Checkbox change handler
+        async function handleCheckboxChange(habitIndex, dayIndex) {
+            const weekId = getWeekId(currentWeekOffset);
+            
+            // Update in-memory data
+            currentWeekData.habits[habitIndex][dayIndex] = !currentWeekData.habits[habitIndex][dayIndex];
+            currentWeekData.score = calculateScore(currentWeekData.habits);
+            
+            // Save to Firebase
+            await saveWeekData(weekId, currentWeekData);
+            
+            // Update UI
+            await updateDashboard();
+        }
+
+        // Check all
+        async function checkAll() {
+            const weekId = getWeekId(currentWeekOffset);
+            currentWeekData.habits = currentWeekData.habits.map(week => week.map(() => true));
+            currentWeekData.score = 100;
+            await saveWeekData(weekId, currentWeekData);
+            await renderTable();
+            await updateDashboard();
+        }
+
+        // Uncheck all
+        async function uncheckAll() {
+            const weekId = getWeekId(currentWeekOffset);
+            currentWeekData.habits = currentWeekData.habits.map(week => week.map(() => false));
+            currentWeekData.score = 0;
+            await saveWeekData(weekId, currentWeekData);
+            await renderTable();
+            await updateDashboard();
+        }
 
         // Render table
         async function renderTable() {
             const weekId = getWeekId(currentWeekOffset);
-            const weekData = await getWeekData(weekId);
-            currentWeekData = weekData; // Store in memory
+            currentWeekData = await getWeekData(weekId);
             
-            const tbody = document.getElementById('habitsTableBody');
+            const tbody = document.getElementById('habitsBody');
+            const t = translations[currentLanguage];
             tbody.innerHTML = '';
-
+            
             habits.forEach((habit, habitIndex) => {
+                const translatedHabit = currentLanguage === 'ro' && habitIndex < t.habitsList.length 
+                    ? t.habitsList[habitIndex] 
+                    : habit;
+                
                 const row = document.createElement('tr');
                 const habitCell = document.createElement('td');
-                habitCell.textContent = habit;
+                habitCell.textContent = translatedHabit;
                 row.appendChild(habitCell);
-
+                
                 for (let day = 0; day < 7; day++) {
-                    const dayCell = document.createElement('td');
+                    const cell = document.createElement('td');
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
-                    checkbox.checked = weekData.habits[habitIndex][day];
-                    checkbox.onchange = () => toggleHabit(habitIndex, day);
-                    dayCell.appendChild(checkbox);
-                    row.appendChild(dayCell);
+                    checkbox.checked = currentWeekData.habits[habitIndex] && currentWeekData.habits[habitIndex][day];
+                    checkbox.onchange = () => handleCheckboxChange(habitIndex, day);
+                    cell.appendChild(checkbox);
+                    row.appendChild(cell);
                 }
-
+                
                 tbody.appendChild(row);
             });
-        }
-
-        // Toggle habit
-        async function toggleHabit(habitIndex, dayIndex) {
-            const weekId = getWeekId(currentWeekOffset);
             
-            // Toggle in current data
-            currentWeekData.habits[habitIndex][dayIndex] = !currentWeekData.habits[habitIndex][dayIndex];
-            currentWeekData.score = calculateScore(currentWeekData);
-            
-            // Update UI immediately (before saving to Firebase)
-            updateDashboardSync(currentWeekData);
-            
-            // Save to Firebase in background
-            saveWeekData(weekId, currentWeekData).catch(error => {
-                console.error('Error saving to Firebase:', error);
-                
-                // Show helpful error message based on error type
-                let errorMsg = 'Failed to save progress. ';
-                if (error.code === 'permission-denied') {
-                    errorMsg += 'Firestore permissions not set up. Check Firebase Console → Firestore Database → Rules.';
-                } else if (error.code === 'unavailable') {
-                    errorMsg += 'Please check your internet connection.';
-                } else {
-                    errorMsg += error.message || 'Unknown error occurred.';
-                }
-                
-                alert(errorMsg);
-            });
-        }
-        
-        // Synchronous dashboard update for instant feedback
-        function updateDashboardSync(weekData) {
-            const score = weekData.score;
-
-            // Update score immediately
-            document.getElementById('currentScore').textContent = `${score}%`;
-
-            // Update chart immediately
-            updateChart(score);
-
-            // Update insights immediately
-            updateInsights(weekData);
-
-            // Update tips immediately
-            updateTips(score);
-            
-            // Update comparison asynchronously (needs Firebase data)
-            updateComparison(score);
-        }
-        
-        // Async comparison update
-        async function updateComparison(score) {
-            if (currentWeekOffset === 0) {
-                const lastWeekId = getWeekId(-1);
-                const lastWeekData = await getWeekData(lastWeekId);
-                if (lastWeekData.score > 0) {
-                    const diff = score - lastWeekData.score;
-                    const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
-                    const className = diff > 0 ? 'trend-up' : diff < 0 ? 'trend-down' : '';
-                    document.getElementById('comparison').innerHTML = 
-                        `Last week: ${lastWeekData.score}% → This week: ${score}% <span class="${className}">${arrow} ${Math.abs(diff)}%</span>`;
-                } else {
-                    document.getElementById('comparison').textContent = 'Track your first week';
-                }
-            } else {
-                document.getElementById('comparison').textContent = `Week score: ${score}%`;
+            // Update table headers
+            const thead = document.querySelector('#habitsTable thead tr');
+            const ths = thead.querySelectorAll('th');
+            ths[0].textContent = 'Habit';
+            for (let i = 0; i < 7; i++) {
+                ths[i + 1].textContent = t.days[i];
             }
         }
 
         // Update dashboard
         async function updateDashboard() {
-            // Use stored data if available, otherwise fetch
-            let weekData = currentWeekData;
-            if (!weekData) {
-                const weekId = getWeekId(currentWeekOffset);
-                weekData = await getWeekData(weekId);
-                currentWeekData = weekData;
-            }
-            
+            const weekId = getWeekId(currentWeekOffset);
+            const weekData = currentWeekData || await getWeekData(weekId);
             const score = weekData.score;
 
             // Update score
@@ -1603,6 +2279,9 @@
 
             // Update tips
             updateTips(score);
+            
+            // Update streaks
+            await calculateStreaks();
         }
 
         // Update chart
@@ -1660,10 +2339,17 @@
 
         // Update insights
         function updateInsights(weekData) {
+            const t = translations[currentLanguage];
             const habitScores = habits.map((habit, index) => {
-                const completed = weekData.habits[index].filter(Boolean).length;
+                const habitData = weekData.habits[index] || Array(7).fill(false);
+                const completed = habitData.filter(Boolean).length;
                 const percentage = Math.round((completed / 7) * 100);
-                return { habit, completed, percentage };
+                
+                const translatedHabit = currentLanguage === 'ro' && index < t.habitsList.length 
+                    ? t.habitsList[index] 
+                    : habit;
+                
+                return { habit: translatedHabit, completed, percentage };
             });
 
             habitScores.sort((a, b) => b.percentage - a.percentage);
@@ -1739,8 +2425,9 @@
             const monday = getMondayOfWeek(currentWeekOffset);
             const weekNum = getWeekNumber(monday);
             const year = monday.getFullYear();
+            const t = translations[currentLanguage];
             
-            document.getElementById('weekTitle').textContent = `Week ${weekNum}, ${year}`;
+            document.getElementById('weekTitle').textContent = `${t.weekTitle} ${weekNum}, ${year}`;
             document.getElementById('weekDates').textContent = formatWeekDates(monday);
             
             // Disable next button if current week
@@ -1753,6 +2440,10 @@
             updateWeekDisplay();
             await renderTable();
             await updateDashboard();
+            
+            if (monthlyViewActive) {
+                renderMonthlyView();
+            }
         }
 
         // Next week
@@ -1762,6 +2453,10 @@
                 updateWeekDisplay();
                 await renderTable();
                 await updateDashboard();
+                
+                if (monthlyViewActive) {
+                    renderMonthlyView();
+                }
             }
         }
 
@@ -1771,7 +2466,7 @@
             if (confirm(t.clearConfirm)) {
                 const weekId = getWeekId(currentWeekOffset);
                 const weekData = createEmptyWeekData();
-                currentWeekData = weekData; // Update stored data
+                currentWeekData = weekData;
                 await saveWeekData(weekId, weekData);
                 await renderTable();
                 await updateDashboard();
