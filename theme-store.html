@@ -515,7 +515,7 @@
                 <label>Tags (comma separated)</label>
                 <input type="text" id="themeTags" placeholder="dark, purple, neon, minimal">
                 
-                <button type="button" class="upload-btn" id="submitBtn">🚀 Submit Theme</button>
+                <button type="button" class="upload-btn" id="submitBtn" onclick="submitTheme()">🚀 Submit Theme</button>
             </div>
         </div>
     </div>
@@ -752,12 +752,18 @@
                 card.className = 'theme-card';
                 card.onclick = () => downloadTheme(index);
 
-                const bgColor = theme.colors?.['--bg-primary'] || '#0a0a0f';
-                const accentColor = theme.colors?.['--accent-primary'] || '#a855f7';
+                // Use dark or colors for preview
+                const themeColors = theme.dark || theme.colors || {};
+                const bgColor = themeColors['--bg-primary'] || '#0a0a0f';
+                const accentColor = themeColors['--accent-primary'] || '#a855f7';
+                
+                // Banner image or gradient preview
+                const bannerStyle = theme.banner ? `background-image: url('${theme.banner}'); background-size: cover; background-position: center;` : `background: ${bgColor};`;
+                const bannerContent = theme.banner ? '' : `<div class="theme-preview-circle" style="background: ${accentColor};"></div>`;
 
                 card.innerHTML = `
-                    <div class="theme-preview" style="background: ${bgColor};">
-                        <div class="theme-preview-circle" style="background: ${accentColor};"></div>
+                    <div class="theme-preview" style="${bannerStyle}">
+                        ${bannerContent}
                     </div>
                     <div class="theme-title">${theme.name}</div>
                     <div class="theme-author">by ${theme.author || 'Anonymous'}</div>
@@ -915,20 +921,13 @@
             };
 
             try {
-                // Save to Firestore if logged in, otherwise localStorage
-                console.log('Submitting theme, logged in:', !!currentUser);
-                console.log('Theme data:', newTheme);
-                
-                if (currentUser) {
-                    const docRef = await db.collection('themes').add(newTheme);
-                    console.log('Theme saved to Firestore, ID:', docRef.id);
-                } else {
-                    newTheme.submittedAt = new Date().toISOString();
-                    const storeThemes = JSON.parse(localStorage.getItem('storeThemes') || '[]');
-                    storeThemes.unshift(newTheme);
-                    localStorage.setItem('storeThemes', JSON.stringify(storeThemes));
-                    console.log('Theme saved to localStorage');
-                }
+                // Save to localStorage for now (Firestore permissions issue)
+                console.log('Saving to localStorage...');
+                newTheme.submittedAt = new Date().toISOString();
+                const storeThemes = JSON.parse(localStorage.getItem('storeThemes') || '[]');
+                storeThemes.unshift(newTheme);
+                localStorage.setItem('storeThemes', JSON.stringify(storeThemes));
+                console.log('Theme saved to localStorage');
 
                 closeSubmitModal();
                 loadThemes();
@@ -939,18 +938,31 @@
             }
         }
 
-        document.addEventListener('click', (e) => {
-            const modal = document.getElementById('submitModal');
-            if (modal.classList.contains('show') && !modal.querySelector('.modal-content').contains(e.target)) {
-                closeSubmitModal();
-            }
-        });
+        // Global click listener disabled for testing
+        // document.addEventListener('click', (e) => {
+        //     const modal = document.getElementById('submitModal');
+        //     const modalContent = modal.querySelector('.modal-content');
+        //     const closeBtn = modal.querySelector('.modal-close');
+        //     if (modal.classList.contains('show') && 
+        //         modalContent && 
+        //         !modalContent.contains(e.target) && 
+        //         e.target !== closeBtn &&
+        //         e.target.id !== 'submitBtn') {
+        //         closeSubmitModal();
+        //     }
+        // });
 
         // Submit button click handler
-        document.getElementById('submitBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Submit button clicked');
-            submitTheme();
+        window.addEventListener('load', function() {
+            const btn = document.getElementById('submitBtn');
+            console.log('Button found:', !!btn);
+            if(btn) {
+                btn.onclick = function(e) {
+                    e.preventDefault();
+                    console.log('Submit button clicked');
+                    window.submitTheme();
+                };
+            }
         });
     </script>
 </body>
