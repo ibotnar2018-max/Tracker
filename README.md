@@ -944,7 +944,7 @@ MIT License - Free to use, modify, and distribute.
 ### Firebase Configuration (Same as index.html)
 ```javascript
 const firebaseConfig = {
-    apiKey: "AIzaSyDZ025kEy2N6WtCBEYPPrtWR8qW-tLvZ-w",
+    apiKey: "[hidden]",
     authDomain: "tracker-14cc6.firebaseapp.com",
     projectId: "tracker-14cc6",
     storageBucket: "tracker-14cc6.firebasestorage.app",
@@ -984,7 +984,7 @@ service cloud.firestore {
 - ✅ Theme card click downloads JSON directly
 - ✅ Banner images display correctly
 - ✅ Account dropdown with My Themes, Liked Themes, Logout
-- ✅ Admin (i.botnar2018@gmail.com) can delete any theme
+- ✅ Admin can delete any theme
 - ✅ Themes save to localStorage (Firestore needs proper rules for cloud)
 
 ### Known Issues
