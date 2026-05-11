@@ -620,7 +620,7 @@ service cloud.firestore {
 
 ```javascript
 const firebaseConfig = {
-    apiKey: "AIzaSyDZ025kEy2N6WtCBEYPPrtWR8qW-tLvZ-w",
+    apiKey: "[hidden]",
     authDomain: "tracker-14cc6.firebaseapp.com",
     projectId: "tracker-14cc6",
     storageBucket: "tracker-14cc6.firebasestorage.app",
